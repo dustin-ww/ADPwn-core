@@ -21,6 +21,21 @@ const asciiArt string = `
 
 func main() {
 
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	// projectService, err := service.NewProjectService()
+	// projects, err := projectService.GetAllProjects(ctx)
+
+	// if err != nil {
+	// 	fmt.Printf("Fehler beim Abrufen der Projekte: %v\n", err)
+	// 	return
+	// }
+
+	// // Projekte ausgeben
+	// for _, project := range projects {
+	// 	fmt.Printf("Projekt: %s (UUID: %s)\n", project.Name, project.ID)
+	// }
+
 	progArgs := os.Args
 
 	if len(progArgs) > 1 {
@@ -49,5 +64,8 @@ func startApp() {
 	for {
 		fmt.Println("Type Option")
 		fmt.Scan(&lastInput)
+
+		//projectService := service.NewProjectService(projectRepo)
+
 	}
 }

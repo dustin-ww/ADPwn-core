@@ -1,6 +1,6 @@
 package model
 
 type Project struct {
-	UUID string `db:"UUID"`
-	Name string `db:"name"`
+	ID   string `db:"ID"`
+	Name string `db:"Name"`
 }
