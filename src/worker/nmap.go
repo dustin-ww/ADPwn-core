@@ -9,7 +9,7 @@ import (
 	"runtime"
 )
 
-func execute() {
+func Execute() {
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
