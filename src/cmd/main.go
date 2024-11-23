@@ -1,8 +1,12 @@
 package main
 
 import (
+	"ADPwn/cmd/states"
+	"ADPwn/database/project/service"
+	"context"
 	"fmt"
 	"os"
+	"time"
 )
 
 const asciiArt string = `
@@ -21,29 +25,29 @@ const asciiArt string = `
 
 func main() {
 
-	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// defer cancel()
-	// projectService, err := service.NewProjectService()
-	// projects, err := projectService.GetAllProjects(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	projectService, err := service.NewProjectService()
+	projects, err := projectService.GetAllProjects(ctx)
 
-	// if err != nil {
-	// 	fmt.Printf("Fehler beim Abrufen der Projekte: %v\n", err)
-	// 	return
-	// }
-
-	// // Projekte ausgeben
-	// for _, project := range projects {
-	// 	fmt.Printf("Projekt: %s (UUID: %s)\n", project.Name, project.ID)
-	// }
+	if err != nil {
+		fmt.Printf("Fehler beim Abrufen der Projekte: %v\n", err)
+		return
+	}
+	for _, project := range projects {
+		fmt.Printf("Projekt: %s (UUID: %s)\n", project.Name, project.ID)
+	}
 
 	progArgs := os.Args
 
-	if len(progArgs) > 1 {
-		fmt.Println("Unrecognized program options. Please type --help for valid arguments")
-		os.Exit(1)
+	if len(progArgs) >= 2 {
+		handleAdditionalProgramArgs(progArgs)
 	}
+	startApp()
+}
 
-	switch args := progArgs[1]; args {
+func handleAdditionalProgramArgs(additionalArgs []string) {
+	switch args := additionalArgs[1]; args {
 	case "--version":
 		fmt.Println("Version 0.0.1 Alpha")
 	case "--help":
@@ -51,21 +55,18 @@ func main() {
 	case "start":
 		startApp()
 	default:
-		fmt.Println("Unrecognized program options!")
-		os.Exit(1)
+		fmt.Println("Unrecognized program options. Please type --help for valid arguments")
 	}
+	os.Exit(1)
 }
 
 func startApp() {
-	var lastInput string
-
 	fmt.Println(asciiArt)
 
-	for {
-		fmt.Println("Type Option")
-		fmt.Scan(&lastInput)
+	context := &states.Context{}
+	context.SetState(&states.MainMenuState{})
 
-		//projectService := service.NewProjectService(projectRepo)
-
+	for context.CurrentState != nil {
+		context.Execute()
 	}
 }
