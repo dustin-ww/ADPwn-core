@@ -23,6 +23,10 @@ func NewProjectService() (*ProjectService, error) {
 	return &ProjectService{repo: projectRepo}, nil
 }
 
-func (s *ProjectService) GetAllProjects(ctx context.Context) ([]model.Project, error) {
-	return s.repo.GetAllProjects(ctx)
+func (s *ProjectService) AllProjects(ctx context.Context) ([]model.Project, error) {
+	return s.repo.AllProjects(ctx)
+}
+
+func (s *ProjectService) SaveProject(ctx context.Context, project model.Project) error {
+	return s.repo.SaveProject(ctx, project)
 }

@@ -8,7 +8,8 @@ import (
 )
 
 type ProjectRepository interface {
-	GetAllProjects(ctx context.Context) ([]model.Project, error)
+	AllProjects(ctx context.Context) ([]model.Project, error)
+	SaveProject(ctx context.Context, project model.Project) error
 }
 
 type SQLProjectRepository struct {
@@ -19,7 +20,7 @@ func NewSQLProjectRepository(db *sqlx.DB) *SQLProjectRepository {
 	return &SQLProjectRepository{DB: db}
 }
 
-func (r *SQLProjectRepository) GetAllProjects(ctx context.Context) ([]model.Project, error) {
+func (r *SQLProjectRepository) AllProjects(ctx context.Context) ([]model.Project, error) {
 	var projects []model.Project
 	query := "SELECT * FROM Projects"
 	err := r.DB.SelectContext(ctx, &projects, query)
@@ -27,4 +28,13 @@ func (r *SQLProjectRepository) GetAllProjects(ctx context.Context) ([]model.Proj
 		return nil, err
 	}
 	return projects, nil
+}
+
+func (r *SQLProjectRepository) SaveProject(ctx context.Context, project model.Project) error {
+	_, err := r.DB.NamedExecContext(ctx, `INSERT INTO project (first_name, last_name, email)
+        VALUES (:first_name, :last_name, :email)`, project)
+	if err != nil {
+		return err
+	}
+	return nil
 }

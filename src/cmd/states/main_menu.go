@@ -5,20 +5,23 @@ import "fmt"
 type MainMenuState struct{}
 
 func (s *MainMenuState) Execute(context *Context) {
-	fmt.Println("\nHauptmenü:")
-	fmt.Println("1. Zum Untermenü")
-	fmt.Println("2. Beenden")
+	fmt.Println("\nADPwn - Menu:")
+	fmt.Println("1. Select Project to load")
+	fmt.Println("2. Create new project")
+	fmt.Println("3. Exit")
 	var choice int
-	fmt.Print("Wählen Sie: ")
+	fmt.Print("Please choose options: ")
 	fmt.Scan(&choice)
 
 	switch choice {
 	case 1:
-		context.SetState(&SubMenuState{})
+		context.SetState(&ProjectSelectMenuState{})
 	case 2:
-		fmt.Println("Programm wird beendet.")
+
+	case 3:
+		fmt.Println("Exit...")
 		context.SetState(nil)
 	default:
-		fmt.Println("Ungültige Auswahl.")
+		fmt.Println("Invalid option.")
 	}
 }

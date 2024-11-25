@@ -1,4 +1,4 @@
-package toolrunner
+package main
 
 type runner interface {
 	run() string
