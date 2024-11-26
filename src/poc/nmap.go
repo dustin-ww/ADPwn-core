@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ADPwn/poc/model"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -62,18 +63,18 @@ func readNmapXML() Nmaprun {
 	return nmapRun
 }
 
-func DomainControllers() []DomainController {
+func DomainControllers() []model.DomainController {
 	return domainControllersByPort88()
 }
 
-func domainControllersByPort88() []DomainController {
+func domainControllersByPort88() []model.DomainController {
 	nmapRun := readNmapXML()
-	var domainControllers []DomainController
+	var domainControllers []model.DomainController
 
 	for _, host := range nmapRun.Host {
 		for _, port := range host.Ports.Port {
 			if port.Portid == "88" {
-				domainControllers = append(domainControllers, DomainController{host.Address.Addr, "not implemented"})
+				domainControllers = append(domainControllers, model.DomainController{Ip: host.Address.Addr, Hostname: host.Hostnames, Reliablity: model.Safe})
 			}
 		}
 	}
