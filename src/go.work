@@ -2,6 +2,6 @@ go 1.22.7
 
 use (
 	./cmd
-	./worker
+	./poc
 	./database
 )

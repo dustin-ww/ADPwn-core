@@ -1,7 +1,13 @@
 CREATE TABLE Projects (
-    ID int NOT NULL,
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Name varchar(255) NOT NULL,
-    CONSTRAINT PK_Projects PRIMARY KEY (ID)
+    Created_At DATETIME DEFAULT CURRENT_TIMESTAMP
 )
 
-INSERT into Projects (ID, Name) VALUES (1, "TestProject");
+INSERT into Projects (ID, Name) VALUES ("TestProject");
+
+
+CREATE TABLE IPs {
+    ID int NOT NULL AUTOINCREMENT PRIMARY KEY,
+    IP
+}
