@@ -1,39 +1,42 @@
 package utils
 
 import (
-	"context"
 	"log"
 	"sync"
 
-	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/dgraph-io/dgo/v210"
+	"github.com/dgraph-io/dgo/v210/protos/api"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding/gzip"
 )
 
 var (
-	db    *sqlx.DB
+	db    *dgo.Dgraph
 	once  sync.Once
 	dbErr error
 )
 
-func GetDB() (*sqlx.DB, error) {
+func GetDB() (*dgo.Dgraph, error) {
 	once.Do(func() {
-		db, dbErr = sqlx.Connect("sqlite3", "./../../db.sqlite")
-		if dbErr != nil {
-			log.Printf("Error while connecting to the database: %v", dbErr)
+
+		dialOpts := append([]grpc.DialOption{},
+			grpc.WithInsecure(),
+			grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
+		)
+		var err error
+
+		conn, err := grpc.Dial("localhost:9080", dialOpts...)
+		if err != nil {
+			dbErr = err
+			log.Fatal(err)
 		}
+
+		db = dgo.NewDgraphClient(api.NewDgraphClient(conn))
 	})
-	return db, dbErr
-}
 
-func CloseDB() {
-	if db != nil {
-		_ = db.Close()
-	}
-}
-
-func QueryContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
-	if db == nil {
+	if dbErr != nil {
 		return nil, dbErr
 	}
-	return db.QueryxContext(ctx, query, args...)
+
+	return db, nil
 }

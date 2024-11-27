@@ -1,86 +1,6 @@
-package main
+package serializable
 
-import (
-	"ADPwn/poc/model"
-	"encoding/xml"
-	"fmt"
-	"io"
-	"log"
-	"os"
-	"os/exec"
-	"path"
-)
-
-func Execute() {
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-	} else {
-		log.Println(dir)
-		fmt.Println(dir)
-	}
-	out, err := exec.Command("nmap", "-oX", "192.168.57.0/24").Output()
-
-	if err != nil {
-		fmt.Printf("%s", err)
-	}
-	fmt.Println("Command Successfully Executed")
-	output := string(out[:])
-	fmt.Println(output)
-
-	e, err := os.Executable()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(path.Dir(e))
-
-}
-
-func main() {
-	/* if runtime.GOOS == "windows" {
-		fmt.Println("Can't Execute this on a windows machine")
-	} else {
-		Execute()
-	} */
-	fmt.Printf("%v", DomainControllers())
-}
-
-func readNmapXML() Nmaprun {
-	path, _ := os.Getwd()
-	nmapXML, err := os.Open(path + "/out/nmap.xml")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("Successfully Opened nmap.xml")
-	byteValue, _ := io.ReadAll(nmapXML)
-
-	var nmapRun Nmaprun
-	xml.Unmarshal(byteValue, &nmapRun)
-
-	defer nmapXML.Close()
-	return nmapRun
-}
-
-func DomainControllers() []model.DomainController {
-	return domainControllersByPort88()
-}
-
-func domainControllersByPort88() []model.DomainController {
-	nmapRun := readNmapXML()
-	var domainControllers []model.DomainController
-
-	for _, host := range nmapRun.Host {
-		for _, port := range host.Ports.Port {
-			if port.Portid == "88" {
-				domainControllers = append(domainControllers, model.DomainController{Ip: host.Address.Addr, Hostname: host.Hostnames, Reliablity: model.Safe})
-			}
-		}
-	}
-	fmt.Println("Namap found 2 Domain Controllers by Port 88")
-	return domainControllers
-}
+import "encoding/xml"
 
 type Nmaprun struct {
 	XMLName          xml.Name `xml:"nmaprun"`
@@ -114,10 +34,11 @@ type Nmaprun struct {
 			Reason    string `xml:"reason,attr"`
 			ReasonTtl string `xml:"reason_ttl,attr"`
 		} `xml:"status"`
-		Address struct {
+		Address []struct {
 			Text     string `xml:",chardata"`
 			Addr     string `xml:"addr,attr"`
 			Addrtype string `xml:"addrtype,attr"`
+			Vendor   string `xml:"vendor,attr"`
 		} `xml:"address"`
 		Hostnames string `xml:"hostnames"`
 	} `xml:"hosthint"`
@@ -131,10 +52,11 @@ type Nmaprun struct {
 			Reason    string `xml:"reason,attr"`
 			ReasonTtl string `xml:"reason_ttl,attr"`
 		} `xml:"status"`
-		Address struct {
+		Address []struct {
 			Text     string `xml:",chardata"`
 			Addr     string `xml:"addr,attr"`
 			Addrtype string `xml:"addrtype,attr"`
+			Vendor   string `xml:"vendor,attr"`
 		} `xml:"address"`
 		Hostnames string `xml:"hostnames"`
 		Ports     struct {
@@ -162,13 +84,67 @@ type Nmaprun struct {
 					ReasonTtl string `xml:"reason_ttl,attr"`
 				} `xml:"state"`
 				Service struct {
-					Text   string `xml:",chardata"`
-					Name   string `xml:"name,attr"`
-					Method string `xml:"method,attr"`
-					Conf   string `xml:"conf,attr"`
+					Text      string   `xml:",chardata"`
+					Name      string   `xml:"name,attr"`
+					Product   string   `xml:"product,attr"`
+					Ostype    string   `xml:"ostype,attr"`
+					Method    string   `xml:"method,attr"`
+					Conf      string   `xml:"conf,attr"`
+					Version   string   `xml:"version,attr"`
+					Extrainfo string   `xml:"extrainfo,attr"`
+					Hostname  string   `xml:"hostname,attr"`
+					Tunnel    string   `xml:"tunnel,attr"`
+					Cpe       []string `xml:"cpe"`
 				} `xml:"service"`
+				Script []struct {
+					Text   string `xml:",chardata"`
+					ID     string `xml:"id,attr"`
+					Output string `xml:"output,attr"`
+					Table  []struct {
+						Text string `xml:",chardata"`
+						Key  string `xml:"key,attr"`
+						Elem []struct {
+							Text string `xml:",chardata"`
+							Key  string `xml:"key,attr"`
+						} `xml:"elem"`
+						Table []struct {
+							Text string `xml:",chardata"`
+							Key  string `xml:"key,attr"`
+							Elem []struct {
+								Text string `xml:",chardata"`
+								Key  string `xml:"key,attr"`
+							} `xml:"elem"`
+							Table struct {
+								Text string   `xml:",chardata"`
+								Key  string   `xml:"key,attr"`
+								Elem []string `xml:"elem"`
+							} `xml:"table"`
+						} `xml:"table"`
+					} `xml:"table"`
+					Elem []struct {
+						Text string `xml:",chardata"`
+						Key  string `xml:"key,attr"`
+					} `xml:"elem"`
+				} `xml:"script"`
 			} `xml:"port"`
 		} `xml:"ports"`
+		Hostscript struct {
+			Text   string `xml:",chardata"`
+			Script []struct {
+				Text   string `xml:",chardata"`
+				ID     string `xml:"id,attr"`
+				Output string `xml:"output,attr"`
+				Table  struct {
+					Text string `xml:",chardata"`
+					Key  string `xml:"key,attr"`
+					Elem string `xml:"elem"`
+				} `xml:"table"`
+				Elem []struct {
+					Text string `xml:",chardata"`
+					Key  string `xml:"key,attr"`
+				} `xml:"elem"`
+			} `xml:"script"`
+		} `xml:"hostscript"`
 		Times struct {
 			Text   string `xml:",chardata"`
 			Srtt   string `xml:"srtt,attr"`
@@ -176,6 +152,19 @@ type Nmaprun struct {
 			To     string `xml:"to,attr"`
 		} `xml:"times"`
 	} `xml:"host"`
+	Postscript struct {
+		Text   string `xml:",chardata"`
+		Script struct {
+			Text   string `xml:",chardata"`
+			ID     string `xml:"id,attr"`
+			Output string `xml:"output,attr"`
+			Table  struct {
+				Text string   `xml:",chardata"`
+				Key  string   `xml:"key,attr"`
+				Elem []string `xml:"elem"`
+			} `xml:"table"`
+		} `xml:"script"`
+	} `xml:"postscript"`
 	Runstats struct {
 		Text     string `xml:",chardata"`
 		Finished struct {

@@ -29,7 +29,8 @@ func (s *ProjectSelectMenuState) Execute(context *Context) {
 		return
 	}
 	for _, project := range projects {
-		fmt.Printf("Projekt: %s (UUID: %s)\n", project.Name, project.ID)
+		fmt.Println("Projekt: " + project.Name)
+		fmt.Println("ID: " + fmt.Sprintf("%d", project.ID))
 	}
 
 	switch choice {

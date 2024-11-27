@@ -19,7 +19,7 @@ func NewProjectService() (*ProjectService, error) {
 	}
 
 	// Repository initialisieren
-	projectRepo := repository.NewSQLProjectRepository(db)
+	projectRepo := repository.NewDgraphIOProjectRepository(db)
 	return &ProjectService{repo: projectRepo}, nil
 }
 

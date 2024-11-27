@@ -26,7 +26,7 @@ func (worker NetExec) Execute() {
 	// here we perform the pwd command.
 	// we can store the output of this in our out variable
 	// and catch any errors in err
-	out, err := exec.Command("nmap", "localhost").Output()
+	out, err := exec.Command("nxc", "smb").Output()
 
 	// if there is an error with our execution
 	// handle it here

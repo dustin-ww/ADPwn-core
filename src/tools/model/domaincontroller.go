@@ -1,7 +1,7 @@
 package model
 
 type DomainController struct {
-	Ip         string
+	Ipv4       string
 	Hostname   string
 	Reliablity ReliabilityLevel
 }
