@@ -1,27 +1,16 @@
 package states
 
-import "fmt"
+import (
+	"ADPwn/database/project/model"
+	"fmt"
+)
 
-type MainMenuState struct{}
+type MainMenuState struct {
+	Project model.Project
+}
 
 func (s *MainMenuState) Execute(context *Context) {
-	fmt.Println("\nADPwn - Menu:")
-	fmt.Println("1. Select Project to load")
-	fmt.Println("2. Create new project")
-	fmt.Println("3. Exit")
-	var choice int
-	fmt.Print("Please choose options: ")
-	fmt.Scan(&choice)
+	fmt.Println("\nWelcome to main menu:")
 
-	switch choice {
-	case 1:
-		context.SetState(&ProjectSelectMenuState{})
-	case 2:
-
-	case 3:
-		fmt.Println("Exit...")
-		context.SetState(nil)
-	default:
-		fmt.Println("Invalid option.")
-	}
+	context.SetState(nil)
 }

@@ -48,7 +48,7 @@ func startApp() {
 	fmt.Println(asciiArt)
 
 	context := &states.Context{}
-	context.SetState(&states.MainMenuState{})
+	context.SetState(&states.StartMenuState{})
 
 	for context.CurrentState != nil {
 		context.Execute()

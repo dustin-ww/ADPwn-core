@@ -64,8 +64,11 @@ func (r *DgraphIOProjectRepository) SaveProject(ctx context.Context, project mod
 
 	_, err = txn.Mutate(ctx, mu)
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
+
+	txn.Commit(ctx)
 
 	return nil
 }

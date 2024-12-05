@@ -1,43 +1,41 @@
 package states
 
 import (
+	"ADPwn/database/project/model"
 	"ADPwn/database/project/service"
 	db_context "context"
 	"fmt"
+	"log"
+	"os"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ProjectCreateMenuState struct{}
 
 func (s *ProjectCreateMenuState) Execute(context *Context) {
+	var name string
+
 	fmt.Println("\n Please enter name of project:")
-	fmt.Println("1 - Back to main Menu")
-	fmt.Println("\n\n\n\n")
-	var choice int
-	fmt.Scan(&choice)
+	fmt.Scan(&name)
 
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
-	//ctx, cancel := context.(context.Background(), 5*time.Second)
 	defer cancel()
 
+	uuid, _ := uuid.NewV7()
+	projectToSave := *model.NewProject(uuid.String(), name)
+
 	projectService, _ := service.NewProjectService()
-	projects, err := projectService.AllProjects(ctx)
+	err := projectService.SaveProject(ctx, projectToSave)
 
 	if err != nil {
-		fmt.Printf("Fehler beim Abrufen der Projekte: %v\n", err)
-		return
-	}
-	for _, project := range projects {
-		fmt.Printf("Projekt: %s (UUID: %s)\n", project.Name, project.ID)
+		log.Fatal("Error while creating a new project!")
+		os.Exit(1)
+	} else {
+		println("New project is created")
 	}
 
-	switch choice {
-	case 1:
-		context.SetState(&MainMenuState{})
-	case 2:
-		fmt.Println("Aktion ausgeführt.")
-	default:
-		fmt.Println("Ungültige Auswahl.")
-	}
+	context.SetState(&StartMenuState{})
 }

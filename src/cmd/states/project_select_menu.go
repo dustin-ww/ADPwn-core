@@ -12,33 +12,30 @@ type ProjectSelectMenuState struct{}
 func (s *ProjectSelectMenuState) Execute(context *Context) {
 	fmt.Println("\nPlease Select a project to load:")
 	fmt.Println("1 - Back to main Menu")
-	fmt.Println("\n\n\n\n")
-	var choice int
-	fmt.Scan(&choice)
 
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
-	//ctx, cancel := context.(context.Background(), 5*time.Second)
 	defer cancel()
 
-	projectService, err := service.NewProjectService()
+	projectService, serviceErr := service.NewProjectService()
 	projects, err := projectService.AllProjects(ctx)
 
-	if err != nil {
+	if serviceErr != nil {
 		fmt.Printf("Error while fetching projects: %v\n", err)
 		return
 	}
-	for _, project := range projects {
+
+	for i, project := range projects {
+		fmt.Println(i, " -----------")
 		fmt.Println("Projekt: " + project.Name)
-		fmt.Println("ID: " + fmt.Sprintf("%d", project.ID))
+		fmt.Println("ID: " + project.ID + "\n")
 	}
 
-	switch choice {
-	case 1:
-		context.SetState(&MainMenuState{})
-	case 2:
-		fmt.Println("Aktion ausgeführt.")
-	default:
-		fmt.Println("Ungültige Auswahl.")
-	}
+	fmt.Println("Enter Project Number: ")
+
+	var choice int
+	fmt.Scan(&choice)
+
+	context.SetState(&MainMenuState{projects[choice]})
+
 }

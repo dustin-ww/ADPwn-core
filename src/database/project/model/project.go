@@ -1,12 +1,12 @@
 package model
 
 type Project struct {
-	ID   int    `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
-	Type string `json:"project,omitempty"`
+	Type string `json:"type"`
 }
 
-func NewProject(ID int, name string) *Project {
+func NewProject(ID string, name string) *Project {
 	return &Project{
 		ID:   ID,
 		Name: name,
