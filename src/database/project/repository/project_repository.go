@@ -30,6 +30,7 @@ func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Pr
 
 	query := `{
 		allProjects(func: has(id)) {
+			uid
 			id
 			name
 		}
@@ -73,30 +74,30 @@ func (r *DgraphIOProjectRepository) SaveProject(ctx context.Context, project mod
 	return nil
 }
 
-/* type SQLProjectRepository struct {
-	DB *sqlx.DB
-}
+/* func (r *DgraphIOProjectRepository) SaveHosts(ctx context.Context, project model.Project, hosts []model.Host) error {
+	txn := r.DB.NewTxn()
+	defer txn.Discard(ctx)
 
-func NewSQLProjectRepository(db *sqlx.DB) *SQLProjectRepository {
-	return &SQLProjectRepository{DB: db}
-}
-
-func (r *SQLProjectRepository) AllProjects(ctx context.Context) ([]model.Project, error) {
-	var projects []model.Project
-	query := "SELECT * FROM Projects"
-	err := r.DB.SelectContext(ctx, &projects, query)
-	if err != nil {
-		return nil, err
+	projectUpdate := Project{
+		UID:   project.UID, // UID des bestehenden Projekts
+		Hosts: hosts, // Die neuen Clients
 	}
-	return projects, nil
-}
 
-func (r *SQLProjectRepository) SaveProject(ctx context.Context, project model.Project) error {
-	_, err := r.DB.NamedExecContext(ctx, `INSERT INTO project (first_name, last_name, email)
-        VALUES (:first_name, :last_name, :email)`, project)
+
+	pj, err := json.Marshal(hosts)
 	if err != nil {
 		return err
 	}
+
+	mu := &api.Mutation{SetJson: pj}
+
+	_, err = txn.Mutate(ctx, mu)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+
+	txn.Commit(ctx)
+
 	return nil
-}
-*/
+} */

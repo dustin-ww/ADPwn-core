@@ -10,7 +10,7 @@ type MainMenuState struct {
 }
 
 func (s *MainMenuState) Execute(context *Context) {
-	fmt.Println("\nWelcome to main menu:")
+	fmt.Println("\nWelcome to main menu for project: " + s.Project.Name)
 
 	context.SetState(nil)
 }

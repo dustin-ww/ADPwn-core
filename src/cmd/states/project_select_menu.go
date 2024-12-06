@@ -29,6 +29,7 @@ func (s *ProjectSelectMenuState) Execute(context *Context) {
 		fmt.Println(i, " -----------")
 		fmt.Println("Projekt: " + project.Name)
 		fmt.Println("ID: " + project.ID + "\n")
+		fmt.Println("UID: " + project.UID + "\n")
 	}
 
 	fmt.Println("Enter Project Number: ")

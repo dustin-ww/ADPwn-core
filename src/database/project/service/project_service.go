@@ -30,3 +30,16 @@ func (s *ProjectService) AllProjects(ctx context.Context) ([]model.Project, erro
 func (s *ProjectService) SaveProject(ctx context.Context, project model.Project) error {
 	return s.repo.SaveProject(ctx, project)
 }
+
+func (s *ProjectService) SaveSubnet(ctx context.Context, project model.Project, subnet string) error {
+	IPs, _ := utils.GenerateIPs(subnet)
+	var hosts []model.Host
+
+	for _, ip := range IPs {
+		hosts = append(hosts, *model.NewHost(ip))
+	}
+
+	project.Hosts = hosts
+
+	return s.repo.SaveProject(ctx, project)
+}
