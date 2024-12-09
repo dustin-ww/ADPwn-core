@@ -1,17 +1,15 @@
 package model
 
 type Project struct {
-	UID   string `json:"uid"`
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Type  string `json:"type"`
-	Hosts []Host `json:"nodes,omitempty"`
+	UID   string   `json:"uid,omitempty"`
+	Name  string   `json:"name"`
+	Hosts []Host   `json:"hosts,omitempty"`
+	DType []string `json:"dgraph.type,omitempty"`
 }
 
-func NewProject(ID string, name string) *Project {
+func NewProject(name string) *Project {
 	return &Project{
-		ID:   ID,
-		Name: name,
-		Type: "Project",
+		Name:  name,
+		DType: []string{"project"},
 	}
 }

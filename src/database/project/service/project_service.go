@@ -36,7 +36,8 @@ func (s *ProjectService) SaveSubnet(ctx context.Context, project model.Project, 
 	var hosts []model.Host
 
 	for _, ip := range IPs {
-		hosts = append(hosts, *model.NewHost(ip))
+		hosts = append(hosts, *model.NewHost(ip, project.UID))
+		println("Appending IP: " + ip)
 	}
 
 	project.Hosts = hosts

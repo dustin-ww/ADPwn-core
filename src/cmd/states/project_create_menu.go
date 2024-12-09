@@ -8,8 +8,6 @@ import (
 	"log"
 	"os"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type ProjectCreateMenuState struct{}
@@ -24,8 +22,7 @@ func (s *ProjectCreateMenuState) Execute(context *Context) {
 
 	defer cancel()
 
-	uuid, _ := uuid.NewV7()
-	projectToSave := *model.NewProject(uuid.String(), name)
+	projectToSave := *model.NewProject(name)
 
 	projectService, _ := service.NewProjectService()
 	err := projectService.SaveProject(ctx, projectToSave)

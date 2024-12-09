@@ -28,7 +28,7 @@ func (s *ProjectSelectMenuState) Execute(context *Context) {
 	for i, project := range projects {
 		fmt.Println(i, " -----------")
 		fmt.Println("Projekt: " + project.Name)
-		fmt.Println("ID: " + project.ID + "\n")
+		fmt.Println("ID: " + project.UID + "\n")
 		fmt.Println("UID: " + project.UID + "\n")
 	}
 
@@ -37,6 +37,6 @@ func (s *ProjectSelectMenuState) Execute(context *Context) {
 	var choice int
 	fmt.Scan(&choice)
 
-	context.SetState(&MainMenuState{projects[choice]})
+	context.SetState(&MainMenuState{projects[choice-1]})
 
 }

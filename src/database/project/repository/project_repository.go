@@ -13,6 +13,8 @@ import (
 type ProjectRepository interface {
 	AllProjects(ctx context.Context) ([]model.Project, error)
 	SaveProject(ctx context.Context, project model.Project) error
+	DeleteProject(ctx context.Context, project model.Project) error
+	AllConnectedUIDs(ctx context.Context, project model.Project) ([]string, error)
 }
 
 type DgraphIOProjectRepository struct {
@@ -29,12 +31,17 @@ func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Pr
 	defer txn.Discard(ctx)
 
 	query := `{
-		allProjects(func: has(id)) {
-			uid
-			id
+		allProjects(func: has(name)) {
+    		uid
 			name
-		}
-	}`
+    		hosts {
+				uid
+        		ip
+        		host_project_id
+        		is_domaincontroller
+      	}
+  	}
+}`
 
 	res, err := txn.Query(ctx, query)
 	if err != nil {
@@ -70,8 +77,43 @@ func (r *DgraphIOProjectRepository) SaveProject(ctx context.Context, project mod
 	}
 
 	txn.Commit(ctx)
+	fmt.Println("Saved Project")
+
+	return err
+}
+
+func (r *DgraphIOProjectRepository) DeleteProject(ctx context.Context, project model.Project) error {
+
+	txn := r.DB.NewTxn()
+	defer txn.Discard(ctx)
+
+	query := `{
+		allUIDs(func: eq(uid, "` + project.UID + `")) {
+		  uid
+		  hosts {
+			uid
+		  }
+		}
+	  }`
+
+	res, err := txn.Query(ctx, query)
+	if err != nil {
+		return fmt.Errorf("error while querying dgraph: %v", err)
+	}
+
+	var response struct {
+		AllUids []string `json:"allUIDs"`
+	}
+
+	if err := json.Unmarshal(res.Json, &response); err != nil {
+		return fmt.Errorf("error unmarshaling json: %v", err)
+	}
 
 	return nil
+}
+
+func (r *DgraphIOProjectRepository) AllConnectedUIDs(ctx context.Context, project model.Project) ([]string, error) {
+	return nil, nil
 }
 
 /* func (r *DgraphIOProjectRepository) SaveHosts(ctx context.Context, project model.Project, hosts []model.Host) error {

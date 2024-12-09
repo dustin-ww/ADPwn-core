@@ -1,15 +1,18 @@
 package model
 
 type Host struct {
-	IP                 string `json:"ip"`
-	IsDomaincontroller bool   `json:"isDomaincontroller"`
-	Type               string `json:"type"`
+	UID                string   `json:"uid,omitempty"`
+	IP                 string   `json:"ip"`
+	HostProjectID      string   `json:"host_project_id"`
+	IsDomaincontroller bool     `json:"is_domaincontroller"`
+	DType              []string `json:"dgraph.type,omitempty"`
 }
 
-func NewHost(IP string) *Host {
+func NewHost(IP string, ProjectUID string) *Host {
 	return &Host{
 		IP:                 IP,
+		HostProjectID:      ProjectUID + "|" + IP,
 		IsDomaincontroller: false,
-		Type:               "Client",
+		DType:              []string{"Host"},
 	}
 }

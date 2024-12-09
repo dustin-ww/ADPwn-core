@@ -1,8 +1,8 @@
-package main
+package tools
 
 import (
-	"ADPwn/poc/model"
-	"ADPwn/poc/serializable"
+	"ADPwn/tools/model"
+	"ADPwn/tools/serializable"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -20,7 +20,7 @@ func Execute() {
 		log.Println(dir)
 		fmt.Println(dir)
 	}
-	out, err := exec.Command("nmap", "-oX", "192.168.57.0/24").Output()
+	out, err := exec.Command("nmap", "-oX", "localhost").Output()
 
 	if err != nil {
 		fmt.Printf("%s", err)

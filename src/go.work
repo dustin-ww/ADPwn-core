@@ -4,5 +4,4 @@ use (
 	./cmd
 	./tools
 	./database
-	./utils
 )
