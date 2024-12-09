@@ -5,11 +5,16 @@ import (
 	db_context "context"
 	"fmt"
 	"time"
+
+	tm "github.com/buger/goterm"
 )
 
 type ProjectSelectMenuState struct{}
 
 func (s *ProjectSelectMenuState) Execute(context *Context) {
+	tm.Clear()
+	tm.Flush()
+
 	fmt.Println("\nPlease Select a project to load:")
 	fmt.Println("1 - Back to main Menu")
 
@@ -37,6 +42,10 @@ func (s *ProjectSelectMenuState) Execute(context *Context) {
 	var choice int
 	fmt.Scan(&choice)
 
-	context.SetState(&MainMenuState{projects[choice-1]})
+	if choice >= len(projects) {
+		fmt.Println("Error: your input is invalid!")
+	} else {
+		context.SetState(&MainMenuState{projects[choice-1]})
+	}
 
 }

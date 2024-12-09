@@ -4,6 +4,7 @@ type Project struct {
 	UID   string   `json:"uid,omitempty"`
 	Name  string   `json:"name"`
 	Hosts []Host   `json:"hosts,omitempty"`
+	Users []User   `json:"users,omitempty"`
 	DType []string `json:"dgraph.type,omitempty"`
 }
 

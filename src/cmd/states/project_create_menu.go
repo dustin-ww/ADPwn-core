@@ -8,11 +8,14 @@ import (
 	"log"
 	"os"
 	"time"
+
+	tm "github.com/buger/goterm"
 )
 
 type ProjectCreateMenuState struct{}
 
 func (s *ProjectCreateMenuState) Execute(context *Context) {
+	tm.Clear()
 	var name string
 
 	fmt.Println("\n Please enter name of project:")
