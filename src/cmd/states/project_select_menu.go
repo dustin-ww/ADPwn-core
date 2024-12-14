@@ -1,51 +1,99 @@
 package states
 
 import (
+	"ADPwn/database/project/model"
 	"ADPwn/database/project/service"
 	db_context "context"
 	"fmt"
+	"log"
 	"time"
 
-	tm "github.com/buger/goterm"
+	"github.com/rivo/tview"
 )
 
-type ProjectSelectMenuState struct{}
+type ProjectSelectMenuState struct {
+	App *tview.Application
+}
 
 func (s *ProjectSelectMenuState) Execute(context *Context) {
-	tm.Clear()
-	tm.Flush()
+	title := s.createTitle("ADPwn - Select Project")
 
-	fmt.Println("\nPlease Select a project to load:")
-	fmt.Println("1 - Back to main Menu")
+	list := tview.NewList()
+	list.AddItem("1. Back to Main Menu", "Go back to the main menu", '1', func() {
+		context.SetState(&StartMenuState{App: s.App})
+	})
 
+	for i, project := range s.fetchProjects() {
+		index := i + 1
+		list.AddItem(
+			fmt.Sprintf("%d. %s", index, project.Name),
+			fmt.Sprintf("ID: %s", project.UID),
+			rune('1'+i),
+			func() { s.showActions(*context, project) },
+		)
+	}
+
+	s.setRootLayout(title, list)
+}
+
+func (s *ProjectSelectMenuState) showActions(context Context, project model.Project) {
+	title := s.createTitle("Project Actions")
+	list := tview.NewList().
+		AddItem("1. Load", "Load Project", '1', func() {
+			s.loadProject(context, project)
+		}).
+		AddItem("2. Delete", "Delete Project", '2', func() {
+			s.deleteProject(context, project)
+		})
+
+	s.setRootLayout(title, list)
+}
+
+func (s *ProjectSelectMenuState) loadProject(context Context, project model.Project) {
+	context.SetState(&MainMenuState{Project: project, App: s.App})
+}
+
+func (s *ProjectSelectMenuState) deleteProject(context Context, project model.Project) {
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
-
 	defer cancel()
 
-	projectService, serviceErr := service.NewProjectService()
-	projects, err := projectService.AllProjects(ctx)
-
-	if serviceErr != nil {
-		fmt.Printf("Error while fetching projects: %v\n", err)
-		return
-	}
-
-	for i, project := range projects {
-		fmt.Println(i, " -----------")
-		fmt.Println("Projekt: " + project.Name)
-		fmt.Println("ID: " + project.UID + "\n")
-		fmt.Println("UID: " + project.UID + "\n")
-	}
-
-	fmt.Println("Enter Project Number: ")
-
-	var choice int
-	fmt.Scan(&choice)
-
-	if choice >= len(projects) {
-		fmt.Println("Error: your input is invalid!")
+	if projectService, err := service.NewProjectService(); err == nil {
+		projectService.DeleteProject(ctx, project)
+		context.SetState(&StartMenuState{App: s.App})
 	} else {
-		context.SetState(&MainMenuState{projects[choice-1]})
+		log.Printf("Error deleting project: %v", err)
+	}
+}
+
+func (s *ProjectSelectMenuState) fetchProjects() []model.Project {
+	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
+	defer cancel()
+
+	projectService, err := service.NewProjectService()
+	if err != nil {
+		log.Fatal("Error creating project service: ", err)
 	}
 
+	projects, err := projectService.AllProjects(ctx)
+	if err != nil {
+		log.Fatal("Error fetching projects: ", err)
+	}
+
+	return projects
+}
+
+func (s *ProjectSelectMenuState) createTitle(text string) *tview.TextView {
+	return tview.NewTextView().
+		SetText(text).
+		SetTextAlign(tview.AlignCenter).
+		SetDynamicColors(true)
+}
+
+func (s *ProjectSelectMenuState) setRootLayout(title *tview.TextView, content tview.Primitive) {
+	flex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(title, 3, 0, false).
+		AddItem(content, 0, 1, true)
+
+	s.App.SetRoot(flex, true).SetFocus(content)
 }

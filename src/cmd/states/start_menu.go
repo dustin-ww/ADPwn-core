@@ -2,29 +2,39 @@ package states
 
 import (
 	"fmt"
+
+	"github.com/rivo/tview"
 )
 
-type StartMenuState struct{}
+type StartMenuState struct {
+	App *tview.Application
+}
 
 func (s *StartMenuState) Execute(context *Context) {
+	title := tview.NewTextView().
+		SetText("ADPwn - Start Menu").
+		SetTextAlign(tview.AlignCenter).
+		SetDynamicColors(true)
 
-	fmt.Println("\nADPwn - Menu:")
-	fmt.Println("1. Select Project to load")
-	fmt.Println("2. Create new project")
-	fmt.Println("3. Exit")
-	var choice int
-	fmt.Print("Please choose options: ")
-	fmt.Scan(&choice)
+	list := tview.NewList().
+		AddItem("1. Select Project", "Select an existing project to perform action", '1', func() {
+			context.SetState(&ProjectSelectMenuState{App: s.App})
+		}).
+		AddItem("2. Create new project", "Create a new project", '2', func() {
+			context.SetState(&ProjectCreateMenuState{App: s.App})
+		}).
+		AddItem("3. Exit", "Exit ADPwn", '3', func() {
+			fmt.Println("Exiting...")
+			s.App.Stop()
+			context.SetState(nil)
+		})
 
-	switch choice {
-	case 1:
-		context.SetState(&ProjectSelectMenuState{})
-	case 2:
-		context.SetState(&ProjectCreateMenuState{})
-	case 3:
-		fmt.Println("Exit...")
-		context.SetState(nil)
-	default:
-		fmt.Println("Invalid option.")
+	flex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(title, 3, 0, false).
+		AddItem(list, 0, 1, true)
+
+	if err := s.App.SetRoot(flex, true).SetFocus(list).Run(); err != nil {
+		panic(err)
 	}
 }

@@ -44,3 +44,7 @@ func (s *ProjectService) SaveSubnet(ctx context.Context, project model.Project, 
 
 	return s.repo.SaveProject(ctx, project)
 }
+
+func (s *ProjectService) DeleteProject(ctx context.Context, project model.Project) error {
+	return s.repo.DeleteProject(ctx, project)
+}

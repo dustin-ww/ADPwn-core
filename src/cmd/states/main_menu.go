@@ -1,37 +1,49 @@
 package states
 
 import (
-	"ADPwn/cmd/cmdutils"
 	"ADPwn/database/project/model"
-	"fmt"
 
-	tm "github.com/buger/goterm"
+	"github.com/rivo/tview"
 )
 
 type MainMenuState struct {
 	Project model.Project
+	App     *tview.Application
 }
 
 func (s *MainMenuState) Execute(context *Context) {
-	cmdutils.ClearCMD()
-	s.printCMD()
 
-	var choice int
-	fmt.Print("\n Please choose options: ")
-	fmt.Scan(&choice)
+	title := tview.NewTextView().
+		SetText("ADPwn - Main Menu").
+		SetTextAlign(tview.AlignCenter).
+		SetDynamicColors(true)
 
-	switch choice {
-	case 1:
-		context.SetState(&MainMenuAddUserState{Project: s.Project})
-	case 2:
-		fmt.Println("Exit...")
-		context.SetState(nil)
-	default:
-		fmt.Println("Invalid option.")
-	}
+	list := tview.NewList()
+
+	list.AddItem("Add Single Host", "", '1', func() {
+		context.SetState(&StartMenuState{App: s.App})
+	})
+	list.AddItem("Add Host Range", "", '2', func() {
+		context.SetState(&StartMenuState{App: s.App})
+	})
+	list.AddItem("Add User", "", '3', func() {
+		context.SetState(&StartMenuState{App: s.App})
+	})
+
+	list.AddItem("Run Enumeration", "", '4', func() {
+		context.SetState(&StartMenuState{App: s.App})
+	})
+
+	flex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(title, 3, 0, false).
+		AddItem(list, 0, 1, true)
+
+	s.App.SetRoot(flex, true).SetFocus(list)
+
 }
 
-func (s *MainMenuState) printCMD() {
+/* func (s *MainMenuState) printCMD() {
 	tm.Println(tm.Background(tm.Color(tm.Bold("ADPwn - Main Menu"), tm.RED), tm.WHITE))
 	tm.Println(tm.Background(tm.Color(tm.Bold("\nProject: "+s.Project.Name+"("+s.Project.UID+")"), tm.RED), tm.WHITE))
 
@@ -46,7 +58,7 @@ func (s *MainMenuState) printCMD() {
 	tm.Println(tm.Color(tm.Bold("4. Run nmap enumeration"), tm.RED))
 
 	tm.Flush()
-}
+} */
 
 func (s *MainMenuState) addUser(context *Context) {
 

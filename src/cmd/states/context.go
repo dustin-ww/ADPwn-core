@@ -10,6 +10,9 @@ type Context struct {
 
 func (c *Context) SetState(state State) {
 	c.CurrentState = state
+	if c.CurrentState != nil {
+		c.CurrentState.Execute(c)
+	}
 }
 
 func (c *Context) Execute() {

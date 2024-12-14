@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
@@ -87,26 +88,19 @@ func (r *DgraphIOProjectRepository) DeleteProject(ctx context.Context, project m
 	txn := r.DB.NewTxn()
 	defer txn.Discard(ctx)
 
-	query := `{
-		allUIDs(func: eq(uid, "` + project.UID + `")) {
-		  uid
-		  hosts {
-			uid
-		  }
-		}
-	  }`
+	deleteProjectQuery := `{
+		"uid": "` + project.UID + `",
+		"name": null
+	}`
 
-	res, err := txn.Query(ctx, query)
+	mutation := &api.Mutation{
+		CommitNow:  true,
+		DeleteJson: []byte(deleteProjectQuery),
+	}
+
+	_, err := txn.Mutate(context.Background(), mutation)
 	if err != nil {
-		return fmt.Errorf("error while querying dgraph: %v", err)
-	}
-
-	var response struct {
-		AllUids []string `json:"allUIDs"`
-	}
-
-	if err := json.Unmarshal(res.Json, &response); err != nil {
-		return fmt.Errorf("error unmarshaling json: %v", err)
+		log.Fatal("Error performing mutation:", err)
 	}
 
 	return nil
