@@ -4,7 +4,7 @@ type User struct {
 	UID      string   `json:"uid,omitempty"`
 	Username string   `json:"username"`
 	Password string   `json:"password,omitempty"`
-	NTLNHash string   `json:"ntlm_hash,omitempty"`
+	NTLNHash string   `json:"ntlmHash,omitempty"`
 	DType    []string `json:"dgraph.type,omitempty"`
 }
 

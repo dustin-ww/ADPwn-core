@@ -3,8 +3,8 @@ package model
 type Host struct {
 	UID                string   `json:"uid,omitempty"`
 	IP                 string   `json:"ip"`
-	HostProjectID      string   `json:"host_project_id"`
-	IsDomaincontroller bool     `json:"is_domaincontroller"`
+	HostProjectID      string   `json:"hostProjectID"`
+	IsDomaincontroller bool     `json:"isDomaincontroller"`
 	DType              []string `json:"dgraph.type,omitempty"`
 }
 
