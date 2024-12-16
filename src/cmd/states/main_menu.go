@@ -2,6 +2,7 @@ package states
 
 import (
 	"ADPwn/database/project/model"
+	worker "ADPwn/tools"
 
 	"github.com/rivo/tview"
 )
@@ -31,7 +32,10 @@ func (s *MainMenuState) Execute(context *Context) {
 	})
 
 	list.AddItem("Run Enumeration", "", '4', func() {
-		context.SetState(&StartMenuState{App: s.App})
+		context.SetState(nil)
+		s.App.Stop()
+		enumerator := worker.Enumerator{}
+		enumerator.Run()
 	})
 
 	flex := tview.NewFlex().
@@ -42,23 +46,6 @@ func (s *MainMenuState) Execute(context *Context) {
 	s.App.SetRoot(flex, true).SetFocus(list)
 
 }
-
-/* func (s *MainMenuState) printCMD() {
-	tm.Println(tm.Background(tm.Color(tm.Bold("ADPwn - Main Menu"), tm.RED), tm.WHITE))
-	tm.Println(tm.Background(tm.Color(tm.Bold("\nProject: "+s.Project.Name+"("+s.Project.UID+")"), tm.RED), tm.WHITE))
-
-	tm.Println(tm.Color(tm.Bold("--- Configure Project ---"), tm.YELLOW))
-	tm.Println(tm.Color(tm.Bold("1. Add Hosts"), tm.YELLOW))
-	tm.Println(tm.Color(tm.Bold("2. Add User"), tm.YELLOW))
-
-	tm.Println(tm.Color(tm.Bold("--- Get Informations ---"), tm.BLUE))
-	tm.Println(tm.Color(tm.Bold("3. Get all"), tm.BLUE))
-
-	tm.Println(tm.Color(tm.Bold("--- Run Attacks ---"), tm.RED))
-	tm.Println(tm.Color(tm.Bold("4. Run nmap enumeration"), tm.RED))
-
-	tm.Flush()
-} */
 
 func (s *MainMenuState) addUser(context *Context) {
 

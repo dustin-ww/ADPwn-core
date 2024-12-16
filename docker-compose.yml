@@ -4,7 +4,7 @@ services:
   zero:
     image: dgraph/dgraph:latest
     volumes:
-      - zero_datav2:/dgraph 
+      - zero_datav3:/dgraph
     ports:
       - 5080:5080
       - 6080:6080
@@ -16,7 +16,7 @@ services:
   alpha:
     image: dgraph/dgraph:latest
     volumes:
-      - alpha_datav2:/dgraph
+      - alpha_datav3:/dgraph
     ports:
       - 8080:8080
       - 9080:9080
@@ -38,5 +38,5 @@ networks:
     internal: true  
 
 volumes:
-  zero_datav2:  
-  alpha_datav2:
+  zero_datav3:
+  alpha_datav3:
