@@ -8,9 +8,9 @@ type Domain struct {
 	DType []string `json:"dgraph.type,omitempty"`
 }
 
-func NewDomain(name string) *Project {
-	return &Project{
+func NewDomain(name string) *Domain {
+	return &Domain{
 		Name:  name,
-		DType: []string{"project"},
+		DType: []string{"domain"},
 	}
 }

@@ -5,17 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
 )
 
 type ProjectRepository interface {
 	AllProjects(ctx context.Context) ([]model.Project, error)
-	SaveProject(ctx context.Context, project model.Project) error
+	SaveProject(ctx context.Context, project model.Project) (model.Project, error)
 	DeleteProject(ctx context.Context, project model.Project) error
 	AllConnectedUIDs(ctx context.Context, project model.Project) ([]string, error)
+	//ProjectByUID(ctx context.Context, uid string) (model.Project, error)
 }
 
 type DgraphIOProjectRepository struct {
@@ -26,23 +25,69 @@ func NewDgraphIOProjectRepository(db *dgo.Dgraph) *DgraphIOProjectRepository {
 	return &DgraphIOProjectRepository{DB: db}
 }
 
+/*func (r *DgraphIOProjectRepository) ProjectByUID(ctx context.Context, uid string) (model.Project, error) {
+	txn := r.DB.NewTxn()
+	defer txn.Discard(ctx)
+	query := `
+	{
+	  project(func: uid(` + uid + `)) {
+		uid
+		name
+		domains {
+		  uid
+		  name
+		}
+		dgraph.type
+	  }
+	}
+`
+	res, err := txn.Query(ctx, query)
+	if err != nil {
+
+	}
+
+	var response struct {
+		project []model.Project `json:"project"`
+	}
+
+	if err := json.Unmarshal(res.Json, &response); err != nil {
+		return model.Project{}, fmt.Errorf("error unmarshaling json: %v", err)
+	}
+
+	return response.project[0], nil
+
+}*/
+
 func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Project, error) {
 
 	txn := r.DB.NewTxn()
 	defer txn.Discard(ctx)
 
-	query := `{
-		allProjects(func: has(name)) {
-    		uid
+	query := `
+	{allProjects(func: has(name)) @filter(eq(dgraph.type, "project")) {
+    	uid
 			name
-    		hosts {
+  		dgraph.type
+			domains {
 				uid
-        		ip
-        		host_project_id
-        		is_domaincontroller
-      	}
-  	}
-}`
+				name
+				hosts {
+					uid
+					ip
+					hostProjectID
+					isDomaincontroller
+          dgraph.type
+				}
+				users {
+					uid
+					username
+					password
+					ntlmHash
+				}
+        dgraph.type
+			}
+		}
+	}`
 
 	res, err := txn.Query(ctx, query)
 	if err != nil {
@@ -60,27 +105,30 @@ func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Pr
 	return response.AllProjects, nil
 }
 
-func (r *DgraphIOProjectRepository) SaveProject(ctx context.Context, project model.Project) error {
+func (r *DgraphIOProjectRepository) SaveProject(ctx context.Context, project model.Project) (model.Project, error) {
 	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
+
+	err := txn.Discard(ctx)
 
 	pj, err := json.Marshal(project)
+
 	if err != nil {
-		return err
+		return model.Project{}, fmt.Errorf("error while json marshal to save project in db: %w", err)
 	}
 
 	mu := &api.Mutation{SetJson: pj}
-
 	_, err = txn.Mutate(ctx, mu)
+
 	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		return model.Project{}, fmt.Errorf("error while json marshal to save project in db: %w", err)
 	}
 
-	txn.Commit(ctx)
-	fmt.Println("Saved Project")
+	err = txn.Commit(ctx)
 
-	return err
+	if err != nil {
+		return model.Project{}, fmt.Errorf("error while txn commit to save project: %w", err)
+	}
+	return project, err
 }
 
 func (r *DgraphIOProjectRepository) DeleteProject(ctx context.Context, project model.Project) error {
@@ -99,11 +147,8 @@ func (r *DgraphIOProjectRepository) DeleteProject(ctx context.Context, project m
 	}
 
 	_, err := txn.Mutate(context.Background(), mutation)
-	if err != nil {
-		log.Fatal("Error performing mutation:", err)
-	}
 
-	return nil
+	return fmt.Errorf("error while deleting project in mutation: %w", err)
 }
 
 func (r *DgraphIOProjectRepository) AllConnectedUIDs(ctx context.Context, project model.Project) ([]string, error) {

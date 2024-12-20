@@ -1,6 +1,7 @@
 package tools
 
 import (
+	model2 "ADPwn/database/project/model"
 	"ADPwn/tools/model"
 	"ADPwn/tools/serializable"
 	"encoding/xml"
@@ -15,7 +16,14 @@ import (
 type Nmap struct {
 }
 
-func (n *Nmap) Execute() {
+func (n *Nmap) Execute(project model2.Project) {
+	n.runCommand()
+	nmapResult := n.parseResultXML()
+	n.filterPort88DomainController(nmapResult)
+	// projectService.add
+}
+
+func (n *Nmap) runCommand() {
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
@@ -41,16 +49,7 @@ func (n *Nmap) Execute() {
 
 }
 
-/* func main() {
-/* if runtime.GOOS == "windows" {
-	fmt.Println("Can't Execute this on a windows machine")
-} else {
-	Execute()
-} */
-//fmt.Printf("%v", DomainControllers())
-//}
-
-func readNmapXML() serializable.Nmaprun {
+func (n *Nmap) parseResultXML() serializable.Nmaprun {
 	path, _ := os.Getwd()
 	nmapXML, err := os.Open(path + "/out/nmap.xml")
 	if err != nil {
@@ -68,14 +67,17 @@ func readNmapXML() serializable.Nmaprun {
 }
 
 func DomainControllers() []model.DomainController {
-	return domainControllersByPort88()
+	return nil
 }
 
-func domainControllersByPort88() []model.DomainController {
-	nmapRun := readNmapXML()
+func (n *Nmap) filterHosts(nmapRun serializable.Nmaprun) {
+
+}
+
+func (n *Nmap) filterPort88DomainController(nmapResult serializable.Nmaprun) []model.DomainController {
 	var domainControllers []model.DomainController
 
-	for _, host := range nmapRun.Host {
+	for _, host := range nmapResult.Host {
 		for _, port := range host.Ports.Port {
 			if port.Portid == "88" {
 				domainControllers = append(domainControllers, model.DomainController{Ipv4: host.Address[0].Addr, Hostname: host.Hostnames, Reliablity: model.Safe})

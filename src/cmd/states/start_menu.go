@@ -2,6 +2,7 @@ package states
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rivo/tview"
 )
@@ -27,6 +28,7 @@ func (s *StartMenuState) Execute(context *Context) {
 			fmt.Println("Exiting...")
 			s.App.Stop()
 			context.SetState(nil)
+			os.Exit(0)
 		})
 
 	flex := tview.NewFlex().

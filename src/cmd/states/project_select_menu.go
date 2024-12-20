@@ -20,14 +20,14 @@ func (s *ProjectSelectMenuState) Execute(context *Context) {
 
 	list := tview.NewList()
 	list.AddItem("1. Back to Main Menu", "Go back to the main menu", '1', func() {
-		context.SetState(&StartMenuState{App: s.App})
+		context.SetState(&MainMenuAddHostRange{App: s.App})
 	})
 
 	for i, project := range s.fetchProjects() {
 		index := i + 1
 		list.AddItem(
 			fmt.Sprintf("%d. %s", index, project.Name),
-			fmt.Sprintf("ID: %s", project.UID),
+			"",
 			rune('1'+i),
 			func() { s.showActions(*context, project) },
 		)
@@ -78,6 +78,8 @@ func (s *ProjectSelectMenuState) fetchProjects() []model.Project {
 	if err != nil {
 		log.Fatal("Error fetching projects: ", err)
 	}
+
+	//json, _ := json.MarshalIndent(projects, "", "  ")
 
 	return projects
 }

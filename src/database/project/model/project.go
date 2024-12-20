@@ -8,8 +8,12 @@ type Project struct {
 }
 
 func NewProject(name string) *Project {
+
+	domain := NewDomain("main")
+
 	return &Project{
-		Name:  name,
-		DType: []string{"project"},
+		Name:    name,
+		Domains: []Domain{*domain},
+		DType:   []string{"project"},
 	}
 }
