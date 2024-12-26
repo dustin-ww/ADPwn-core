@@ -1,6 +1,7 @@
 package states
 
 import (
+	"ADPwn/cmd/states/common"
 	"ADPwn/database/project/model"
 	worker "ADPwn/tools"
 	"os"
@@ -8,12 +9,12 @@ import (
 	"github.com/rivo/tview"
 )
 
-type MainMenuState struct {
+type MainState struct {
 	Project model.Project
 	App     *tview.Application
 }
 
-func (s *MainMenuState) Execute(context *Context) {
+func (s *MainState) Execute(context *common.Context) {
 
 	title := tview.NewTextView().
 		SetText("ADPwn - Main Menu - " + s.Project.Name).
@@ -29,13 +30,13 @@ func (s *MainMenuState) Execute(context *Context) {
 	mainMenuList.AddItem("[yellow::b] ⚙️ Configuration Options[-:-:-]", "", 0, nil)
 
 	mainMenuList.AddItem("Add Single Host", "", '1', func() {
-		context.SetState(&StartMenuState{App: s.App})
+		context.SetState(&AddHostState{App: s.App, Project: s.Project})
 	})
 	mainMenuList.AddItem("Add Host Range", "", '2', func() {
-		context.SetState(&MainMenuAddHostRange{App: s.App, Project: s.Project})
+		context.SetState(&AddHostRangeState{App: s.App, Project: s.Project})
 	})
 	mainMenuList.AddItem("Add User", "", '3', func() {
-		context.SetState(&StartMenuState{App: s.App})
+		context.SetState(&AddUserState{App: s.App, Project: s.Project})
 	})
 
 	// Trennüberschrift hinzufügen
@@ -69,17 +70,10 @@ func (s *MainMenuState) Execute(context *Context) {
 	// Layout mit der Liste erstellen
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(title, 3, 0, false).      // Titel oben
+		AddItem(title, 3, 0, false). // Titel oben
 		AddItem(mainMenuList, 0, 1, true) // Eine Liste, die alles enthält
 
 	// Fokus auf die Liste setzen
 	s.App.SetRoot(flex, true).SetFocus(mainMenuList)
-}
-
-func (s *MainMenuState) addUser(context *Context) {
-
-}
-
-func (s *MainMenuState) addHosts(context *Context) {
 
 }

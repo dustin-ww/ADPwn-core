@@ -1,6 +1,7 @@
 package states
 
 import (
+	"ADPwn/cmd/states/common"
 	"ADPwn/database/project/model"
 	"ADPwn/database/project/service"
 	db_context "context"
@@ -10,26 +11,28 @@ import (
 	"time"
 )
 
-type MainMenuAddHostRange struct {
+type AddHostRangeState struct {
 	App     *tview.Application
 	Project model.Project
 }
 
-func (s *MainMenuAddHostRange) Execute(context *Context) {
+func (s *AddHostRangeState) Execute(context *common.Context) {
 	inputField := tview.NewInputField().
-		SetLabel("Add Host Range (Format: 10.10.10.10/24").
+		SetLabel("(Format: 10.10.10.10/24) ").
 		SetFieldWidth(20)
 
 	inputField.SetDoneFunc(func(key tcell.Key) {
 		hostRange := inputField.GetText()
 		s.addHostRange(s.Project, hostRange)
-		context.SetState(&MainMenuState{App: s.App, Project: s.Project})
+		context.SetState(&MainState{App: s.App, Project: s.Project})
 	})
+
+	inputField.SetBorder(true).SetTitle("Add Host Range").SetTitleAlign(tview.AlignLeft)
 
 	s.App.SetRoot(inputField, true).SetFocus(inputField)
 }
 
-func (s *MainMenuAddHostRange) addHostRange(project model.Project, hostRange string) {
+func (s *AddHostRangeState) addHostRange(project model.Project, hostRange string) {
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
 	defer cancel()
@@ -38,6 +41,6 @@ func (s *MainMenuAddHostRange) addHostRange(project model.Project, hostRange str
 	project, err := projectService.SaveSubnet(ctx, project, hostRange)
 
 	if err != nil {
-		log.Fatal("Error while saving new project: ", err)
+		log.Fatal("Error while saving new host range to project: ", err)
 	}
 }

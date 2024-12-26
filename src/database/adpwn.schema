@@ -2,12 +2,12 @@
 
 name: string @index(exact) .
 domains: [uid] .
-domainProjectID: [string] @index(exact) .
+domainProjectID: string @index(exact) .
 hosts: [uid] @reverse .
 users: [uid] @reverse .
 
 ip: string .
-hostProjectID: [string] @index(exact) .
+hostProjectID: string @index(exact) .
 isDomainController: bool .
 
 username: string @index(exact) .
@@ -33,6 +33,7 @@ type Domain {
 
 type Host {
   ip
+  name
   hostProjectID
   isDomainController
   <~hosts>
@@ -40,7 +41,7 @@ type Host {
 }
 
 type User {
-  username
+  name
   ntlmHash
   password
   isAdmin

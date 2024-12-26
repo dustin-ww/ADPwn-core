@@ -75,6 +75,7 @@ func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Pr
 					uid
 					ip
 					hostProjectID
+					name
 					isDomaincontroller
           dgraph.type
 				}
@@ -107,8 +108,6 @@ func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Pr
 
 func (r *DgraphIOProjectRepository) SaveProject(ctx context.Context, project model.Project) (model.Project, error) {
 	txn := r.DB.NewTxn()
-
-	err := txn.Discard(ctx)
 
 	pj, err := json.Marshal(project)
 

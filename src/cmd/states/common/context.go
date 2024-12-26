@@ -1,8 +1,4 @@
-package states
-
-type State interface {
-	Execute(context *Context)
-}
+package common
 
 type Context struct {
 	CurrentState State

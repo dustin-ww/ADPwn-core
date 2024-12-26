@@ -2,6 +2,7 @@ package main
 
 import (
 	"ADPwn/cmd/states"
+	"ADPwn/cmd/states/common"
 	"fmt"
 	"os"
 
@@ -49,8 +50,8 @@ func handleAdditionalProgramArgs(additionalArgs []string) {
 func startApp() {
 	app := tview.NewApplication()
 
-	context := &states.Context{}
-	context.SetState(&states.StartMenuState{App: app})
+	context := common.Context{}
+	context.SetState(&states.StartState{App: app})
 
 	for context.CurrentState != nil {
 		context.Execute()

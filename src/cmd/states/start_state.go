@@ -1,17 +1,18 @@
 package states
 
 import (
+	"ADPwn/cmd/states/common"
 	"fmt"
 	"os"
 
 	"github.com/rivo/tview"
 )
 
-type StartMenuState struct {
+type StartState struct {
 	App *tview.Application
 }
 
-func (s *StartMenuState) Execute(context *Context) {
+func (s *StartState) Execute(context *common.Context) {
 	title := tview.NewTextView().
 		SetText("ADPwn - Start Menu").
 		SetTextAlign(tview.AlignCenter).
@@ -19,10 +20,10 @@ func (s *StartMenuState) Execute(context *Context) {
 
 	list := tview.NewList().
 		AddItem("1. Select Project", "Select an existing project to perform action", '1', func() {
-			context.SetState(&ProjectSelectMenuState{App: s.App})
+			context.SetState(&ProjectSelectState{App: s.App})
 		}).
 		AddItem("2. Create new project", "Create a new project", '2', func() {
-			context.SetState(&ProjectCreateMenuState{App: s.App})
+			context.SetState(&ProjectCreateState{App: s.App})
 		}).
 		AddItem("3. Exit", "Exit ADPwn", '3', func() {
 			fmt.Println("Exiting...")
