@@ -5,7 +5,6 @@ import (
 	"ADPwn/database/project/repository"
 	"ADPwn/database/utils"
 	"context"
-	"fmt"
 )
 
 type ProjectService struct {
@@ -30,33 +29,44 @@ func (s *ProjectService) CreateProject(ctx context.Context, name string) (model.
 	return s.repo.SaveProject(ctx, *model.NewProject(name))
 }
 
-//func (s *ProjectService) ProjectByID(ctx context.Context, id string) (model.Project, error) {
-//	return s.repo.ProjectByUID(ctx, id)
-//}
+func (s *ProjectService) SaveProject(ctx context.Context, project model.Project) (model.Project, error) {
+	return s.repo.SaveProject(ctx, project)
+}
 
-func (s *ProjectService) SaveSubnet(ctx context.Context, project model.Project, subnet string) (model.Project, error) {
-	IPs, err := utils.GenerateIPs(subnet)
+func (s *ProjectService) SaveSubnetTarget(ctx context.Context, project model.Project, subnet string) (model.Project, error) {
+	/*IPs, err := utils.GenerateIPs(subnet)
 
-	if err != nil {
-		return model.Project{}, fmt.Errorf("error in project service while generating hosts from subnetmask: %w", err)
-	}
+	    if err != nil {
+			return model.Project{}, fmt.Errorf("error in project service while generating hosts from subnetmask: %w", err)
+		}
 
-	var hosts []model.Host
+		var hosts []string
 
-	for _, ip := range IPs {
-		hosts = append(hosts, *model.NewHost(ip, project.UID, project.Name))
-	}
+		for _, ip := range IPs {
+			hosts = append(hosts, ip)
+		}*/
 
-	project.Domains[0].Hosts = append(project.Domains[0].Hosts, hosts...)
+	project.Targets = append(project.Targets, subnet)
 
 	return s.repo.SaveProject(ctx, project)
 }
 
-func (s *ProjectService) SaveHost(ctx context.Context, project model.Project, ip string) (model.Project, error) {
+func (s *ProjectService) SaveSingleTarget(ctx context.Context, project model.Project, ip string) (model.Project, error) {
+	project.Targets = append(project.Targets, ip)
+	return s.repo.SaveProject(ctx, project)
+}
+
+func (s *ProjectService) CreateHost(ctx context.Context, project model.Project, ip string) (model.Project, error) {
 
 	host := *model.NewHost(ip, project.UID, project.Name)
 	project.Domains[0].Hosts = append(project.Domains[0].Hosts, host)
 
+	return s.repo.SaveProject(ctx, project)
+}
+
+func (s *ProjectService) AddHost(ctx context.Context, project model.Project, host model.Host) (model.Project, error) {
+
+	project.Domains[0].Hosts = append(project.Domains[0].Hosts, host)
 	return s.repo.SaveProject(ctx, project)
 }
 

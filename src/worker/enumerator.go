@@ -14,5 +14,5 @@ func (e Enumerator) Run(project model.Project) {
 
 	// nmap for initial recon
 	nmap := tools.Nmap{}
-	nmap.Execute(project)
+	nmap.ExecuteFullRecon(project)
 }

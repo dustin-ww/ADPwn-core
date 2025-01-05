@@ -183,3 +183,13 @@ type Nmaprun struct {
 		} `xml:"hosts"`
 	} `xml:"runstats"`
 }
+
+func (n *Nmaprun) NewFromXML(nmapXML []byte) Nmaprun {
+	var nmapRun Nmaprun
+
+	err := xml.Unmarshal(nmapXML, &nmapRun)
+	if err != nil {
+		return Nmaprun{}
+	}
+	return nmapRun
+}

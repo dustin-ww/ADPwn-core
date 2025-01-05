@@ -1,89 +1,69 @@
 package tools
 
 import (
-	model2 "ADPwn/database/project/model"
-	"ADPwn/tools/model"
+	app_model "ADPwn/database/project/model"
+	"ADPwn/database/project/service"
 	"ADPwn/tools/serializable"
-	"encoding/xml"
-	"fmt"
-	"io"
+	"context"
 	"log"
-	"os"
-	"os/exec"
-	"path"
 )
 
 type Nmap struct {
+	service service.ProjectService
 }
 
-func (n *Nmap) Execute(project model2.Project) {
-	n.runCommand()
-	nmapResult := n.parseResultXML()
-	n.filterPort88DomainController(nmapResult)
-	// projectService.add
-}
+func (n *Nmap) ExecuteFullRecon(project app_model.Project) {
 
-func (n *Nmap) runCommand() {
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-	} else {
-		log.Println(dir)
-		fmt.Println(dir)
-	}
-	out, err := exec.Command("nmap", "-oX", "localhost").Output()
-
-	if err != nil {
-		fmt.Printf("%s", err)
-	}
-	fmt.Println("Command Successfully Executed")
-	output := string(out[:])
-	fmt.Println(output)
-
-	e, err := os.Executable()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(path.Dir(e))
+	nmapRun := n.runCommand(project)
+	n.AddHosts(nmapRun, project)
 
 }
 
-func (n *Nmap) parseResultXML() serializable.Nmaprun {
-	path, _ := os.Getwd()
-	nmapXML, err := os.Open(path + "/out/nmap.xml")
-	if err != nil {
-		fmt.Println(err)
-	}
+func (n *Nmap) runCommand(project app_model.Project) serializable.Nmaprun {
+	//_, cancel := context.WithTimeout(context.Background(), 30000*time.Second)
+	//defer cancel()
 
-	fmt.Println("Successfully Opened nmap.xml")
-	byteValue, _ := io.ReadAll(nmapXML)
+	options := []string{"-oX", "-", "-sVC"}
+	args := append(options, project.Targets...)
+	log.Println(project.Targets)
+
+	log.Println(args)
+
+	//cmd := exec.CommandContext(ctx, "nmap", append(options, project.Targets...)...)
+
+	/*//out, err := cmd.Output()
+	if err != nil {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			log.Println("Error: Command timed out")
+		} else {
+			log.Fatalf("Error executing command: %s\n", err)
+		}
+		return serializable.Nmaprun{}
+	}
+	log.Println("Command Successfully Executed")
 
 	var nmapRun serializable.Nmaprun
-	xml.Unmarshal(byteValue, &nmapRun)
-
-	defer nmapXML.Close()
-	return nmapRun
+	return nmapRun.NewFromXML(out)*/
+	log.Println("FINISH")
+	return serializable.Nmaprun{}
 }
 
-func DomainControllers() []model.DomainController {
-	return nil
-}
+func (n *Nmap) AddHosts(nmapRun serializable.Nmaprun, project app_model.Project) {
+	for _, host := range nmapRun.Host {
+		newHost := app_model.NewHost(host.Address[0].Addr, project.UID, project.Name)
 
-func (n *Nmap) filterHosts(nmapRun serializable.Nmaprun) {
-
-}
-
-func (n *Nmap) filterPort88DomainController(nmapResult serializable.Nmaprun) []model.DomainController {
-	var domainControllers []model.DomainController
-
-	for _, host := range nmapResult.Host {
 		for _, port := range host.Ports.Port {
+			newService := app_model.NewService(port.Service.Name, port.Portid)
+			newHost.Services = append(newHost.Services, *newService)
+			// Domaincontrollers
 			if port.Portid == "88" {
-				domainControllers = append(domainControllers, model.DomainController{Ipv4: host.Address[0].Addr, Hostname: host.Hostnames, Reliablity: model.Safe})
+				newHost.IsDomaincontroller = true
 			}
 		}
+		_, err := n.service.AddHost(context.Background(), project, *newHost)
+		if err != nil {
+			return
+		}
 	}
-	fmt.Println("Namap found 2 Domain Controllers by Port 88")
-	return domainControllers
+	log.Println("")
 }

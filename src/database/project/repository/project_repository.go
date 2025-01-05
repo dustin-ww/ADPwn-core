@@ -66,7 +66,8 @@ func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Pr
 	query := `
 	{allProjects(func: has(name)) @filter(eq(dgraph.type, "project")) {
     	uid
-			name
+		name
+		targets
   		dgraph.type
 			domains {
 				uid

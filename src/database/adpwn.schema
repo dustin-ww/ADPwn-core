@@ -14,12 +14,17 @@ username: string @index(exact) .
 ntlmHash: string .
 password: string .
 isAdmin: bool .
+targets: [string] .
+
+services: [uid] @reverse .
+port: string .
 
 # Types
 
 type Project {
   name
   domains
+  targets
   dgraph.type
 }
 
@@ -36,8 +41,16 @@ type Host {
   name
   hostProjectID
   isDomainController
+  services
   <~hosts>
   dgraph.type
+}
+
+type Service {
+   name
+   port
+   <~services>
+   dgraph.type
 }
 
 type User {

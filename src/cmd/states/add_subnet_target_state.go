@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-type AddHostRangeState struct {
+type AddSubnetTarget struct {
 	App     *tview.Application
 	Project model.Project
 }
 
-func (s *AddHostRangeState) Execute(context *common.Context) {
+func (s *AddSubnetTarget) Execute(context *common.Context) {
 	inputField := tview.NewInputField().
 		SetLabel("(Format: 10.10.10.10/24) ").
 		SetFieldWidth(20)
@@ -27,18 +27,18 @@ func (s *AddHostRangeState) Execute(context *common.Context) {
 		context.SetState(&MainState{App: s.App, Project: s.Project})
 	})
 
-	inputField.SetBorder(true).SetTitle("Add Host Range").SetTitleAlign(tview.AlignLeft)
+	inputField.SetBorder(true).SetTitle("Add Subnet Target").SetTitleAlign(tview.AlignLeft)
 
 	s.App.SetRoot(inputField, true).SetFocus(inputField)
 }
 
-func (s *AddHostRangeState) addHostRange(project model.Project, hostRange string) {
+func (s *AddSubnetTarget) addHostRange(project model.Project, hostRange string) {
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
 	defer cancel()
 
 	projectService, _ := service.NewProjectService()
-	project, err := projectService.SaveSubnet(ctx, project, hostRange)
+	project, err := projectService.SaveSubnetTarget(ctx, project, hostRange)
 
 	if err != nil {
 		log.Fatal("Error while saving new host range to project: ", err)

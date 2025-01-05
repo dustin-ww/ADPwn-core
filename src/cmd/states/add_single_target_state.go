@@ -9,14 +9,14 @@ import (
 	"time"
 )
 
-type AddHostState struct {
+type AddSingleTargetState struct {
 	App     *tview.Application
 	Project model.Project
 
 	ip string
 }
 
-func (s *AddHostState) Execute(context *common.Context) {
+func (s *AddSingleTargetState) Execute(context *common.Context) {
 
 	form := tview.NewForm().
 		AddInputField("IP", "", 20, nil, func(text string) {
@@ -43,13 +43,13 @@ func (s *AddHostState) Execute(context *common.Context) {
 	s.App.SetRoot(form, true).SetFocus(form)
 }
 
-func (s *AddHostState) addHost() error {
+func (s *AddSingleTargetState) addHost() error {
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
 	defer cancel()
 
 	projectService, _ := service.NewProjectService()
-	_, err := projectService.SaveHost(ctx, s.Project, s.ip)
+	_, err := projectService.SaveSingleTarget(ctx, s.Project, s.ip)
 
 	return err
 }

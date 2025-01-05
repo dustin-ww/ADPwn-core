@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"net"
 )
 
@@ -13,6 +14,10 @@ func GenerateIPs(subnet string) ([]string, error) {
 
 	var ips []string
 	for ip := ip.Mask(ipNet.Mask); ipNet.Contains(ip); incrementIP(ip) {
+		if !isPrivateIP(ip.String()) {
+			log.Fatal("This tool is only valid for private ip adres")
+		}
+
 		ips = append(ips, ip.String())
 	}
 
@@ -31,4 +36,26 @@ func incrementIP(ip net.IP) {
 			break
 		}
 	}
+}
+
+func isPrivateIP(ip string) bool {
+	privateBlocks := []string{
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+	}
+
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return false
+	}
+
+	for _, block := range privateBlocks {
+		_, subnet, _ := net.ParseCIDR(block)
+		if subnet.Contains(parsedIP) {
+			return true
+		}
+	}
+
+	return false
 }
