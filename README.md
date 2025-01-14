@@ -52,10 +52,9 @@
 ## About The Project
 
 
-A console-driven framework is being developed to automate the detection and testing of known attack vectors in Active Directory environments, including vulnerabilities such as PrintNightmare, Zerologon, and EternalBlue. The framework aims to streamline the enumeration and exploitation of domains by integrating existing tools like nmap and NetExec. Built in GoLang, the solution features a connection to a Dgraph database for persistent data storage and provides a visual representation of the results, enabling users to analyze and understand the discovered vulnerabilities effectively.
+A console-driven framework is being developed to automate the detection and testing of known attack vectors in Active Directory environments, including vulnerabilities such as PrintNightmare, Zerologon, and EternalBlue. The framework aims to streamline the enumeration and exploitation of domains by integrating with existing tools such as nmap and NetExec. Built in GoLang, the solution features a connection to a Dgraph database for persistent data storage and provides a visual representation of the results, allowing users to effectively analyze and understand the discovered vulnerabilities.
 
 This project is currently only supported on Linux systems and is maintained in the dev branch.
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
