@@ -1,0 +1,63 @@
+# Predicates
+
+name: string @index(exact) .
+domains: [uid] .
+domainProjectID: string @index(exact) .
+hosts: [uid] @reverse .
+users: [uid] @reverse .
+
+ip: string .
+hostProjectID: string @index(exact) .
+isDomainController: bool .
+
+username: string @index(exact) .
+ntlmHash: string .
+password: string .
+isAdmin: bool .
+targets: [string] .
+
+services: [uid] @reverse .
+port: string .
+
+# Types
+
+type Project {
+  name
+  domains
+  targets
+  dgraph.type
+}
+
+type Domain {
+  name
+  domainProjectID
+  hosts
+  users
+  dgraph.type
+}
+
+type Host {
+  ip
+  name
+  hostProjectID
+  isDomainController
+  services
+  <~hosts>
+  dgraph.type
+}
+
+type Service {
+   name
+   port
+   <~services>
+   dgraph.type
+}
+
+type User {
+  name
+  ntlmHash
+  password
+  isAdmin
+  <~users>
+  dgraph.type
+}

@@ -2,8 +2,11 @@ package main
 
 import (
 	"ADPwn/cmd/states"
+	"ADPwn/cmd/states/common"
 	"fmt"
 	"os"
+
+	"github.com/rivo/tview"
 )
 
 const asciiArt string = `
@@ -21,12 +24,12 @@ const asciiArt string = `
 `
 
 func main() {
-
 	progArgs := os.Args
 
 	if len(progArgs) >= 2 {
 		handleAdditionalProgramArgs(progArgs)
 	}
+
 	startApp()
 }
 
@@ -45,12 +48,16 @@ func handleAdditionalProgramArgs(additionalArgs []string) {
 }
 
 func startApp() {
-	fmt.Println(asciiArt)
+	app := tview.NewApplication()
 
-	context := &states.Context{}
-	context.SetState(&states.MainMenuState{})
+	context := common.Context{}
+	context.SetState(&states.StartState{App: app})
 
 	for context.CurrentState != nil {
 		context.Execute()
+	}
+
+	if err := app.Run(); err != nil {
+		panic(err)
 	}
 }

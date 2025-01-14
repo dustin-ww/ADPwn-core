@@ -1,1 +1,42 @@
-*.sqlite
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of the go command
+*.out
+
+# IDE/editor configurations
+.vscode/
+.idea/
+*.iml
+
+# Dependency directories (for vendoring)
+vendor/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Build directories
+bin/
+build/
+dist/
+
+# Coverage files
+coverage.out
+
+# Module cache
+/.cache/

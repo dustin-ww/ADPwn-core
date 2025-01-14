@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  zero:
+    image: dgraph/dgraph:latest
+    volumes:
+      - zero_datav4:/dgraph
+    ports:
+      - 5080:5080
+      - 6080:6080
+    restart: on-failure
+    command: dgraph zero --my=zero:5080
+    networks:
+      - adpwn_network
+
+  alpha:
+    image: dgraph/dgraph:latest
+    volumes:
+      - alpha_datav4:/dgraph
+    ports:
+      - 8080:8080
+      - 9080:9080
+    restart: on-failure
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --security whitelist=0.0.0.0/0
+    networks:
+      - adpwn_network
+
+  ratel:
+    image: dgraph/ratel:latest
+    ports:
+      - 8000:8000
+    networks:
+      - adpwn_network
+
+networks:
+  adpwn_network:
+    driver: bridge
+    internal: true  
+
+volumes:
+  zero_datav4:
+  alpha_datav4:

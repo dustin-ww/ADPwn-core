@@ -1,3 +1,3 @@
-module ADPwn/tool_runner
+module ADPwn/tools
 
 go 1.22.7
