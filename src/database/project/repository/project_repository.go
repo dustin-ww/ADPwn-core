@@ -25,39 +25,6 @@ func NewDgraphIOProjectRepository(db *dgo.Dgraph) *DgraphIOProjectRepository {
 	return &DgraphIOProjectRepository{DB: db}
 }
 
-/*func (r *DgraphIOProjectRepository) ProjectByUID(ctx context.Context, uid string) (model.Project, error) {
-	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
-	query := `
-	{
-	  project(func: uid(` + uid + `)) {
-		uid
-		name
-		domains {
-		  uid
-		  name
-		}
-		dgraph.type
-	  }
-	}
-`
-	res, err := txn.Query(ctx, query)
-	if err != nil {
-
-	}
-
-	var response struct {
-		project []model.Project `json:"project"`
-	}
-
-	if err := json.Unmarshal(res.Json, &response); err != nil {
-		return model.Project{}, fmt.Errorf("error unmarshaling json: %v", err)
-	}
-
-	return response.project[0], nil
-
-}*/
-
 func (r *DgraphIOProjectRepository) AllProjects(ctx context.Context) ([]model.Project, error) {
 
 	txn := r.DB.NewTxn()

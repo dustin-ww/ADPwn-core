@@ -12,7 +12,7 @@
 </hostnames>
 </hosthint>
 <hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
-<address addr="192.168.57.10" addrtype="ipv4"/>
+<address addr="192.168.57.10" addrt ype="ipv4"/>
 <hostnames>
 </hostnames>
 </hosthint>

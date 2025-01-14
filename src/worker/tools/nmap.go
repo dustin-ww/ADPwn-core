@@ -5,7 +5,10 @@ import (
 	"ADPwn/database/project/service"
 	"ADPwn/tools/serializable"
 	"context"
+	"errors"
 	"log"
+	"os/exec"
+	"time"
 )
 
 type Nmap struct {
@@ -20,18 +23,19 @@ func (n *Nmap) ExecuteFullRecon(project app_model.Project) {
 }
 
 func (n *Nmap) runCommand(project app_model.Project) serializable.Nmaprun {
-	//_, cancel := context.WithTimeout(context.Background(), 30000*time.Second)
-	//defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 30000*time.Second)
+	defer cancel()
 
-	options := []string{"-oX", "-", "-sVC"}
+	//options := []string{"-oX", "-", "-sVC"}
+	options := []string{"-oX", "-"}
 	args := append(options, project.Targets...)
 	log.Println(project.Targets)
 
 	log.Println(args)
 
-	//cmd := exec.CommandContext(ctx, "nmap", append(options, project.Targets...)...)
+	cmd := exec.CommandContext(ctx, "nmap", append(options, project.Targets...)...)
 
-	/*//out, err := cmd.Output()
+	out, err := cmd.Output()
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			log.Println("Error: Command timed out")
@@ -43,9 +47,9 @@ func (n *Nmap) runCommand(project app_model.Project) serializable.Nmaprun {
 	log.Println("Command Successfully Executed")
 
 	var nmapRun serializable.Nmaprun
-	return nmapRun.NewFromXML(out)*/
 	log.Println("FINISH")
-	return serializable.Nmaprun{}
+	log.Println(string(out))
+	return nmapRun.NewFromXML(out)
 }
 
 func (n *Nmap) AddHosts(nmapRun serializable.Nmaprun, project app_model.Project) {

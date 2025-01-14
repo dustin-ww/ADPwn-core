@@ -21,5 +21,5 @@ func NewHost(IP string, projectUID string, projectName string) *Host {
 }
 
 func (h Host) AddService(service Service) {
-
+	h.Services = append(h.Services, service)
 }
