@@ -1,4 +1,0 @@
-# Nmap 7.94SVN scan initiated Mon Nov 18 13:51:40 2024 as: nmap -oA nmap localhost
-Host: 127.0.0.1 (localhost)	Status: Up
-Host: 127.0.0.1 (localhost)	Ports: 111/open/tcp//rpcbind///, 2049/open/tcp//nfs///	Ignored State: closed (998)
-# Nmap done at Mon Nov 18 13:51:40 2024 -- 1 IP address (1 host up) scanned in 0.07 seconds

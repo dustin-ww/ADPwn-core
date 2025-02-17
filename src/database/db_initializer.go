@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ADPwn/database/utils"
+	"ADPwn/database/internal/utils"
 	db_context "context"
 	"github.com/dgraph-io/dgo/v210/protos/api"
 	"golang.org/x/net/context"

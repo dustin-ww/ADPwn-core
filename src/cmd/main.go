@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ADPwn/cmd/states"
-	"ADPwn/cmd/states/common"
+	"ADPwn/cmd/internal/states"
+	"ADPwn/cmd/internal/states/common"
 	"fmt"
 	"os"
 
