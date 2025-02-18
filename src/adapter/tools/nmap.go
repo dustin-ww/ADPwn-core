@@ -1,6 +1,6 @@
 package tools
 
-import (
+/*import (
 	app_model "ADPwn/database/project/model"
 	"ADPwn/database/project/service"
 	"ADPwn/tools/serializable"
@@ -11,7 +11,37 @@ import (
 	"time"
 )
 
-func runCommand(string)
+func runCommand(string) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30000*time.Second)
+		defer cancel()
+
+		//options := []string{"-oX", "-", "-sVC"}
+		options := []string{"-oX", "-"}
+		args := append(options, project.Targets...)
+		log.Println(project.Targets)
+
+		log.Println(args)
+
+		cmd := exec.CommandContext(ctx, "nmap", append(options, project.Targets...)...)
+
+		out, err := cmd.Output()
+		if err != nil {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		log.Println("Error: Command timed out")
+	} else {
+		log.Fatalf("Error executing command: %s\n", err)
+	}
+		return serializable.Nmaprun{}
+	}
+		log.Println("Command Successfully Executed")
+
+		var nmapRun serializable.Nmaprun
+		log.Println("FINISH")
+		log.Println(string(out))
+		return nmapRun.NewFromXML(out)
+	}
+
+}*/
 
 /*func (n *Nmap) ExecuteFullRecon(project app_model.Project) {
 
@@ -20,35 +50,6 @@ func runCommand(string)
 
 }
 
-func (n *Nmap) runCommand(project app_model.Project) serializable.Nmaprun {
-	ctx, cancel := context.WithTimeout(context.Background(), 30000*time.Second)
-	defer cancel()
-
-	//options := []string{"-oX", "-", "-sVC"}
-	options := []string{"-oX", "-"}
-	args := append(options, project.Targets...)
-	log.Println(project.Targets)
-
-	log.Println(args)
-
-	cmd := exec.CommandContext(ctx, "nmap", append(options, project.Targets...)...)
-
-	out, err := cmd.Output()
-	if err != nil {
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			log.Println("Error: Command timed out")
-		} else {
-			log.Fatalf("Error executing command: %s\n", err)
-		}
-		return serializable.Nmaprun{}
-	}
-	log.Println("Command Successfully Executed")
-
-	var nmapRun serializable.Nmaprun
-	log.Println("FINISH")
-	log.Println(string(out))
-	return nmapRun.NewFromXML(out)
-}
 
 func (n *Nmap) AddHosts(nmapRun serializable.Nmaprun, project app_model.Project) {
 	for _, host := range nmapRun.Host {
@@ -67,5 +68,5 @@ func (n *Nmap) AddHosts(nmapRun serializable.Nmaprun, project app_model.Project)
 			return
 		}
 	}
-	log.Println("")*/
 }
+*/
