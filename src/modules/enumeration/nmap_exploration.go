@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-type NetworkExplorer struct {
+type NmapExplorer struct {
 	Name         string
 	Description  string
 	Version      string
@@ -17,28 +17,28 @@ type NetworkExplorer struct {
 	Logger       *logger.ADPwnLogger
 }
 
-func (n *NetworkExplorer) DependsOn() int {
+func (n *NmapExplorer) DependsOn() int {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (n *NetworkExplorer) GetName() string {
+func (n *NmapExplorer) GetName() string {
 	return n.Name
 }
 
-func (n *NetworkExplorer) GetDescription() string {
+func (n *NmapExplorer) GetDescription() string {
 	return n.Description
 }
 
-func (n *NetworkExplorer) GetVersion() string {
+func (n *NmapExplorer) GetVersion() string {
 	return n.Version
 }
 
-func (n *NetworkExplorer) GetAuthor() string {
+func (n *NmapExplorer) GetAuthor() string {
 	return n.Author
 }
 
-func (n *NetworkExplorer) Execute(project model.Project, options []string) error {
+func (n *NmapExplorer) Execute(project model.Project, options []string) error {
 
 	n.Logger.Log("[*] Starting AD network enumeration")
 	n.Logger.Log(fmt.Sprintf("[*] Scanning project: %s", project.Name))

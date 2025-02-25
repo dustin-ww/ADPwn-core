@@ -6,7 +6,7 @@ type Host struct {
 	Name               string    `json:"name"`
 	HostProjectID      string    `json:"hostProjectID"`
 	IsDomaincontroller bool      `json:"isDomaincontroller"`
-	Services           []Service `json:"services,omitempty"`
+	Services           []Service `json:"has_service,omitempty"`
 	DType              []string  `json:"dgraph.type,omitempty"`
 }
 

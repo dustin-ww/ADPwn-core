@@ -3,8 +3,8 @@ package model
 type Project struct {
 	UID     string   `json:"uid,omitempty"`
 	Name    string   `json:"name"`
-	Domains []Domain `json:"domains"`
-	Targets []string `json:"targets"`
+	Domains []Domain `json:"has_domain"`
+	Targets []string `json:"has_target"`
 	DType   []string `json:"dgraph.type,omitempty"`
 }
 
