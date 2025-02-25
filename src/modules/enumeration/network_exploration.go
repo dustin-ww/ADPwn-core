@@ -55,6 +55,5 @@ func init() {
 		Version:     "0.1",
 		Author:      "Dustin Wickert",
 	}
-
 	base.GlobalRegistry.RegisterEnumerationModule(module)
 }

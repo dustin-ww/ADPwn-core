@@ -2,7 +2,7 @@ package serializable
 
 import "encoding/xml"
 
-type Nmaprun struct {
+type NmapResult struct {
 	XMLName          xml.Name `xml:"nmaprun"`
 	Text             string   `xml:",chardata"`
 	Scanner          string   `xml:"scanner,attr"`
@@ -184,12 +184,12 @@ type Nmaprun struct {
 	} `xml:"runstats"`
 }
 
-func (n *Nmaprun) NewFromXML(nmapXML []byte) Nmaprun {
-	var nmapRun Nmaprun
+func (n *NmapResult) NewFromXML(nmapXML []byte) NmapResult {
+	var nmapRun NmapResult
 
 	err := xml.Unmarshal(nmapXML, &nmapRun)
 	if err != nil {
-		return Nmaprun{}
+		return NmapResult{}
 	}
 	return nmapRun
 }
