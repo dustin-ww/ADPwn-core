@@ -2,7 +2,7 @@ package enumeration
 
 import (
 	"ADPwn/cmd/logger"
-	"ADPwn/database/model"
+	"ADPwn/core/model"
 	"ADPwn/modules/internal/base"
 	"fmt"
 )

@@ -1,6 +1,9 @@
 package serializable
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 type NmapResult struct {
 	XMLName          xml.Name `xml:"nmaprun"`
@@ -189,7 +192,7 @@ func (n *NmapResult) NewFromXML(nmapXML []byte) NmapResult {
 
 	err := xml.Unmarshal(nmapXML, &nmapRun)
 	if err != nil {
-		return NmapResult{}
+		return fmt.Errorf("")
 	}
 	return nmapRun
 }

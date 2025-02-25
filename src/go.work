@@ -3,6 +3,6 @@ go 1.22.7
 use (
 	./cmd
 	./modules
-	./database
+	./core
 	./adapter
 )

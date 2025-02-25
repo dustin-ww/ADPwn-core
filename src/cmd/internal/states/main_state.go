@@ -3,7 +3,7 @@ package states
 import (
 	"ADPwn/cmd/internal/states/common"
 	"ADPwn/cmd/logger"
-	"ADPwn/database/model"
+	"ADPwn/core/model"
 	"ADPwn/modules"
 	"ADPwn/modules/enumeration"
 	"fmt"

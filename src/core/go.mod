@@ -1,4 +1,4 @@
-module ADPwn/database
+module ADPwn/core
 
 go 1.22.7
 

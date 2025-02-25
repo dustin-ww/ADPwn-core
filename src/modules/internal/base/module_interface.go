@@ -1,6 +1,6 @@
 package base
 
-import "ADPwn/database/model"
+import "ADPwn/core/model"
 
 type ADPwnModule interface {
 	GetName() string

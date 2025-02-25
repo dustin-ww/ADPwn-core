@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// NmapOption definiert die verfügbaren Nmap-Optionen als Enum.
 type NmapOption int
 
 const (
@@ -19,7 +18,6 @@ const (
 	ScriptScan                                // -sC
 )
 
-// String konvertiert das Enum in den entsprechenden Nmap-Options-String.
 func (o NmapOption) String() string {
 	switch o {
 	case OutputXML:
@@ -27,7 +25,7 @@ func (o NmapOption) String() string {
 	case ServiceVersionDetection:
 		return "-sV"
 	case CommonPorts:
-		return "--top-ports 1000" // Kombiniert --top-ports mit dem Wert 1000
+		return "--top-ports 1000"
 	case ScriptScan:
 		return "-sC"
 	default:
@@ -35,25 +33,20 @@ func (o NmapOption) String() string {
 	}
 }
 
-// RunCommand führt den Nmap-Befehl mit den angegebenen Zieladressen und Optionen aus.
 func RunCommand(targetAddresses []string, options []NmapOption) (serializable.NmapResult, error) {
-	// Setze ein Timeout von 30 Sekunden für den Nmap-Befehl
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Second)
 	defer cancel()
 
-	// Konvertiere die Enum-Optionen in Strings
 	var nmapArgs []string
 	for _, opt := range options {
 		nmapArgs = append(nmapArgs, opt.String())
 	}
-	nmapArgs = append(nmapArgs, targetAddresses...) // Füge die Zieladressen hinzu
+	nmapArgs = append(nmapArgs, targetAddresses...)
 
 	log.Printf("Executing nmap with args: %v", nmapArgs)
 
-	// Erstelle den Nmap-Befehl
 	cmd := exec.CommandContext(ctx, "nmap", nmapArgs...)
 
-	// Führe den Befehl aus und erfasse die Ausgabe
 	out, err := cmd.Output()
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
@@ -61,13 +54,13 @@ func RunCommand(targetAddresses []string, options []NmapOption) (serializable.Nm
 		} else {
 			log.Printf("Error executing nmap command: %v", err)
 		}
-		return serializable.Nmaprun{}, err
+		return serializable.NmapResult{}, err
 	}
 
 	log.Println("Nmap command executed successfully")
 
 	// Parse die XML-Ausgabe in ein Nmaprun-Objekt
-	var nmapRun serializable.Nmaprun
+	var nmapRun serializable.NmapResult
 	if err := nmapRun.NewFromXML(out); err != nil {
 		log.Printf("Error parsing nmap output: %v", err)
 		return serializable.Nmaprun{}, err

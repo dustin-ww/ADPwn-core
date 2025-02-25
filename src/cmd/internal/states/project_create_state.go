@@ -2,7 +2,7 @@ package states
 
 import (
 	"ADPwn/cmd/internal/states/common"
-	"ADPwn/database/service"
+	"ADPwn/core/service"
 	db_context "context"
 	"time"
 

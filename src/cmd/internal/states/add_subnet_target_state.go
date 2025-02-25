@@ -2,8 +2,8 @@ package states
 
 import (
 	"ADPwn/cmd/internal/states/common"
-	"ADPwn/database/model"
-	"ADPwn/database/service"
+	"ADPwn/core/model"
+	"ADPwn/core/service"
 	db_context "context"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"ADPwn/database/model"
+	"ADPwn/core/model"
 	"context"
 	"encoding/json"
 	"fmt"

@@ -1,9 +1,9 @@
 package service
 
 import (
-	"ADPwn/database/internal/repository"
-	"ADPwn/database/internal/utils"
-	"ADPwn/database/model"
+	"ADPwn/core/internal/repository"
+	"ADPwn/core/internal/utils"
+	"ADPwn/core/model"
 	"context"
 )
 
