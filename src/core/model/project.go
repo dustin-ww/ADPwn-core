@@ -21,7 +21,7 @@ func NewProject(name string) *Project {
 	}
 }
 
-func (p *Project) targetsAsAddressList() ([]string, error) {
+func (p *Project) TargetsAsAddressList() ([]string, error) {
 	var unifiedIPs []string
 
 	for _, item := range p.Targets {
