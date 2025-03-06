@@ -48,7 +48,7 @@ func (s *ProjectCreateState) createProject() error {
 	defer cancel()
 	projectService, _ := service.NewProjectService()
 
-	_, err := projectService.CreateProject(ctx, s.projectName)
+	_, err := projectService.Create(ctx, s.projectName)
 
 	return err
 }

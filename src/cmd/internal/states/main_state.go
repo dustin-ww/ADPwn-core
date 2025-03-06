@@ -2,26 +2,33 @@ package states
 
 import (
 	"ADPwn/cmd/internal/states/common"
+	"ADPwn/cmd/internal/states/loader"
 	"ADPwn/cmd/logger"
 	"ADPwn/core/model"
 	"ADPwn/modules"
 	"ADPwn/modules/enumeration"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/rivo/tview"
 )
 
 type MainState struct {
-	Project model.Project
-	App     *tview.Application
-	Logger  *logger.ADPwnLogger
+	ProjectID string
+	App       *tview.Application
+	logger    *logger.ADPwnLogger
 }
 
 func (s *MainState) Execute(context *common.Context) {
-	s.Logger = logger.NewADPwnLogger()
+	project, err := loader.LoadProjectFromDB(s.ProjectID)
+	if err != nil {
+		log.Fatal("error loading project: ", err)
+	}
 
-	title := s.createTitle()
+	s.logger = logger.NewADPwnLogger()
+
+	title := s.createTitle(project)
 	mainMenuList := s.createMainMenuList(context)
 	logView := s.createLogView()
 
@@ -30,27 +37,27 @@ func (s *MainState) Execute(context *common.Context) {
 	s.App.SetRoot(flex, true).SetFocus(mainMenuList)
 }
 
-func (s *MainState) createTitle() *tview.TextView {
+func (s *MainState) createTitle(project model.Project) *tview.TextView {
 	return tview.NewTextView().
-		SetText("ADPwn - Main Menu - " + s.Project.Name).
+		SetText("ADPwn - Main Menu - " + project.Name).
 		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true)
 }
 
-func (s *MainState) createMainMenuList(context *common.Context) *tview.List {
+func (s *MainState) createMainMenuList(context *common.Context, project model.Project) *tview.List {
 	mainMenuList := tview.NewList()
 
-	mainMenuList.AddItem("[green::b] 🎯 "+s.Project.Name+"[-:-:-]", "", 0, nil)
+	mainMenuList.AddItem("[green::b] 🎯 "+project.Name+"[-:-:-]", "", 0, nil)
 	mainMenuList.AddItem("[yellow::b] ⚙️ Configuration Options[-:-:-]", "", 0, nil)
 
 	mainMenuList.AddItem("Add Single Host", "", '1', func() {
-		context.SetState(&AddSingleTargetState{App: s.App, Project: s.Project})
+		context.SetState(&AddSingleTargetState{App: s.App, Project: project.UID})
 	})
 	mainMenuList.AddItem("Add Host Range", "", '2', func() {
-		context.SetState(&AddSubnetTarget{App: s.App, Project: s.Project})
+		context.SetState(&AddSubnetTarget{App: s.App, Project: project.UID})
 	})
 	mainMenuList.AddItem("Add User", "", '3', func() {
-		context.SetState(&AddUserState{App: s.App, Project: s.Project})
+		context.SetState(&AddUserState{App: s.App, Project: project.UID})
 	})
 
 	mainMenuList.AddItem("[red::b] ⚔️ Execution Options[-:-:-]", "", 0, nil)
@@ -69,14 +76,14 @@ func (s *MainState) createMainMenuList(context *common.Context) *tview.List {
 func (s *MainState) addModulesToMenu(mainMenuList *tview.List) {
 	for _, module := range modules.GetADPwnModules() {
 		mod := module.(*enumeration.NetworkExplorer)
-		mod.Logger = s.Logger
+		mod.Logger = s.logger
 
 		mainMenuList.AddItem(
 			mod.GetName(),
 			"Version: "+mod.GetVersion()+" from: "+mod.GetAuthor(),
 			0,
 			func() {
-				mod.Execute(s.Project, nil)
+				mod.Execute(s.ProjectID, nil)
 			},
 		)
 	}
@@ -97,7 +104,7 @@ func (s *MainState) createLogView() *tview.TextView {
 }
 
 func (s *MainState) subscribeToLogger(logView *tview.TextView) {
-	logChan := s.Logger.Subscribe()
+	logChan := s.logger.Subscribe()
 	go func() {
 		for msg := range logChan {
 			fmt.Fprintf(logView, "%s\n", msg)

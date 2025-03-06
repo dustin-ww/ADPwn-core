@@ -60,7 +60,7 @@ func (n *NetworkExplorer) Execute(project model.Project, options []string) error
 		fmt.Println("Error getting target addresses")
 		return err
 	}
-	nmapResult, err := nmapAdapter.RunCommand(projectAddressList, nmapOptions)
+	_, err = nmapAdapter.RunCommand(projectAddressList, nmapOptions)
 
 	if err != nil {
 		n.Logger.Log(fmt.Sprintf("[*] Error running command: %s", err.Error()))

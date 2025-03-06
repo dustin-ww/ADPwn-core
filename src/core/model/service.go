@@ -4,8 +4,8 @@ import "errors"
 
 type Service struct {
 	UID   string   `json:"uid,omitempty"`
-	Name  string   `json:"name"`
-	Port  string   `json:"port"`
+	Name  string   `json:"name,omitempty"`
+	Port  string   `json:"port,omitempty"`
 	DType []string `json:"dgraph.type,omitempty"`
 }
 

@@ -1,36 +1,35 @@
-# Predicates
-
-name: string @index(exact) .
-has_domain: [uid] .
-domainProjectID: string @index(exact) .
-has_host: [uid] @reverse .
-has_user: [uid] @reverse .
-
-ip: string .
-hostProjectID: string @index(exact) .
-isDomainController: bool .
-
-username: string @index(exact) .
-ntlmHash: string .
-password: string .
-isAdmin: bool .
-targets: [string] .
-
-has_service: [uid] @reverse .
-port: string .
-
-# Types
+<name>: string @index(exact) .
+<has_target>: [uid] .
+<belongs_to_project>: [uid] @reverse .
+<has_domain>: [uid] .
+<has_host>: [uid] .
+<belongs_to_domain>: [uid] @reverse .
+<has_user>: [uid] .
+<has_service>: [uid] .
+<port>: string .
+<ip>: string @index(exact) .
+<is_domain_controller>: bool .
+<ntlm_hash>: string .
+<password>: string .
+<ip_range>: string .
+<is_admin>: bool .
 
 type Project {
   name
-  targets
+  has_target
   has_domain
+  dgraph.type
+}
+
+type Target {
+  name
+  ip_range
   dgraph.type
 }
 
 type Domain {
   name
-  domainProjectID
+  belongs_to_project
   has_host
   has_user
   dgraph.type
@@ -38,26 +37,23 @@ type Domain {
 
 type Host {
   ip
-  name
-  hostProjectID
-  isDomainController
+  is_domain_controller
+  belongs_to_domain
   has_service
-  <~has_host>
   dgraph.type
 }
 
 type Service {
-   name
-   port
-   <~has_service>
-   dgraph.type
+  name
+  port
+  dgraph.type
 }
 
 type User {
   name
-  ntlmHash
+  ntlm_hash
   password
-  isAdmin
-  <~has_user>
+  is_admin
+  belongs_to_domain
   dgraph.type
 }

@@ -2,17 +2,12 @@ package states
 
 import (
 	"ADPwn/cmd/internal/states/common"
-	"ADPwn/core/model"
-	"ADPwn/core/service"
-	db_context "context"
 	"github.com/rivo/tview"
-	"log"
-	"time"
 )
 
 type AddUserState struct {
-	App     *tview.Application
-	Project model.Project
+	App       *tview.Application
+	ProjectID string
 
 	username string
 	password string
@@ -40,12 +35,12 @@ func (s *AddUserState) Execute(context *common.Context) {
 		AddButton("Save", func() {
 			s.addUser()
 			common.ShowSuccessAlert(s.App, "User added successfully!", func() {
-				context.SetState(&MainState{App: s.App, Project: s.Project})
+				context.SetState(&MainState{App: s.App, ProjectID: s.ProjectID})
 			})
 
 		}).
 		AddButton("Back", func() {
-			context.SetState(&MainState{App: s.App, Project: s.Project})
+			context.SetState(&MainState{App: s.App, ProjectID: s.ProjectID})
 		})
 	form.SetBorder(true).SetTitle("Add User").SetTitleAlign(tview.AlignLeft)
 
@@ -53,15 +48,17 @@ func (s *AddUserState) Execute(context *common.Context) {
 }
 
 func (s *AddUserState) addUser() {
-	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
+	/*ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
-	defer cancel()
+		defer cancel()
 
-	projectService, _ := service.NewProjectService()
-	project, err := projectService.SaveUser(ctx, s.Project, s.username, s.password, s.ntlmHash, s.isAdmin)
-	s.Project = project
+		//TODO: FIX
+	/*	projectService, _ := service.NewProjectService()
+		project, err := projectService.SaveUser(ctx, s.Project, s.username, s.password, s.ntlmHash, s.isAdmin)
+		s.Project = project*/
 
-	if err != nil {
+	/*	if err != nil {
 		log.Fatal("error while saving new user to project: ", err)
-	}
+	}*/
+
 }

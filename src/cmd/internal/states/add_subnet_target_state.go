@@ -2,7 +2,6 @@ package states
 
 import (
 	"ADPwn/cmd/internal/states/common"
-	"ADPwn/core/model"
 	"ADPwn/core/service"
 	db_context "context"
 	"github.com/gdamore/tcell/v2"
@@ -12,8 +11,8 @@ import (
 )
 
 type AddSubnetTarget struct {
-	App     *tview.Application
-	Project model.Project
+	App       *tview.Application
+	ProjectID string
 }
 
 func (s *AddSubnetTarget) Execute(context *common.Context) {
@@ -23,8 +22,8 @@ func (s *AddSubnetTarget) Execute(context *common.Context) {
 
 	inputField.SetDoneFunc(func(key tcell.Key) {
 		hostRange := inputField.GetText()
-		s.addHostRange(s.Project, hostRange)
-		context.SetState(&MainState{App: s.App, Project: s.Project})
+		s.addHostRange(hostRange)
+		context.SetState(&MainState{App: s.App, ProjectID: s.ProjectID})
 	})
 
 	inputField.SetBorder(true).SetTitle("Add Subnet Target").SetTitleAlign(tview.AlignLeft)
@@ -32,13 +31,13 @@ func (s *AddSubnetTarget) Execute(context *common.Context) {
 	s.App.SetRoot(inputField, true).SetFocus(inputField)
 }
 
-func (s *AddSubnetTarget) addHostRange(project model.Project, hostRange string) {
+func (s *AddSubnetTarget) addHostRange(hostRange string) {
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
 	defer cancel()
 
 	projectService, _ := service.NewProjectService()
-	project, err := projectService.SaveSubnetTarget(ctx, project, hostRange)
+	err := projectService.AddTarget(ctx, projectService, hostRange)
 
 	if err != nil {
 		log.Fatal("Error while saving new host range to project: ", err)

@@ -9,7 +9,6 @@ import (
 )
 
 type NetExec struct {
-	string Result
 }
 
 func (worker NetExec) testAnonymousLogin() {

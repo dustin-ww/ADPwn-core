@@ -24,7 +24,7 @@ func (s *ProjectSelectState) Execute(context *common.Context) {
 		context.SetState(&StartState{App: s.App})
 	})
 
-	for i, project := range s.fetchProjects() {
+	for i, project := range s.fetchProjectOverviews() {
 		index := i + 1
 		list.AddItem(
 			fmt.Sprintf("%d. %s", index, project.Name),
@@ -37,7 +37,7 @@ func (s *ProjectSelectState) Execute(context *common.Context) {
 	s.setRootLayout(title, list)
 }
 
-func (s *ProjectSelectState) showActions(context common.Context, project model.Project) {
+func (s *ProjectSelectState) showActions(context common.Context, project *model.Project) {
 	title := s.createTitle("Project Actions")
 	list := tview.NewList().
 		AddItem("1. Load", "Load Project", '1', func() {
@@ -50,23 +50,24 @@ func (s *ProjectSelectState) showActions(context common.Context, project model.P
 	s.setRootLayout(title, list)
 }
 
-func (s *ProjectSelectState) loadProject(context common.Context, project model.Project) {
-	context.SetState(&MainState{Project: project, App: s.App})
+func (s *ProjectSelectState) loadProject(context common.Context, project *model.Project) {
+	context.SetState(&MainState{Project: project.UID, App: s.App})
 }
 
+// TODO: Fix
 func (s *ProjectSelectState) deleteProject(context common.Context, project model.Project) {
-	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
-	defer cancel()
+	//ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
+	//defer cancel()
 
-	if projectService, err := service.NewProjectService(); err == nil {
-		projectService.DeleteProject(ctx, project)
-		context.SetState(&StartState{App: s.App})
-	} else {
-		log.Printf("Error deleting project: %v", err)
-	}
+	/*	if projectService, err := service.NewProjectService(); err == nil {
+			//projectService.DeleteProject(ctx, project)
+			context.SetState(&StartState{App: s.App})
+		} else {
+			log.Printf("Error deleting project: %v", err)
+		}*/
 }
 
-func (s *ProjectSelectState) fetchProjects() []model.Project {
+func (s *ProjectSelectState) fetchProjectOverviews() []*model.Project {
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -75,7 +76,7 @@ func (s *ProjectSelectState) fetchProjects() []model.Project {
 		log.Fatal("Error creating project service: ", err)
 	}
 
-	projects, err := projectService.AllProjects(ctx)
+	projects, err := projectService.GetOverviewFromAll(ctx)
 	if err != nil {
 		log.Fatal("Error fetching projects: ", err)
 	}
