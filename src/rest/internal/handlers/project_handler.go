@@ -3,6 +3,7 @@ package handlers
 import (
 	"ADPwn/core/service"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ func NewProjectHandler(projectService *service.ProjectService) *ProjectHandler {
 func (h *ProjectHandler) GetProjectOverviews(c *gin.Context) {
 	// Verwende den Service
 	projects, err := h.projectService.GetOverviewForAll(c.Request.Context())
+	log.Println(*projects[0])
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -45,8 +47,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	log.
-		projectUID, err := h.projectService.Create(
+	projectUID, err := h.projectService.Create(
 		c.Request.Context(),
 		request.Name,
 	)

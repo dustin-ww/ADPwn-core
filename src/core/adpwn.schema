@@ -2,6 +2,7 @@
 <has_target>: [uid] .
 <belongs_to_project>: [uid] @reverse .
 <has_domain>: [uid] .
+<has_adpwn_modules>: [uid] .
 <has_host>: [uid] .
 <belongs_to_domain>: [uid] @reverse .
 <has_user>: [uid] .
@@ -13,11 +14,32 @@
 <password>: string .
 <ip_range>: string .
 <is_admin>: bool .
+<attack_id>: string @index(exact) .
+<metric>: string .
+<version>: string .
+<author>: string .
+<last_run>: datetime .
+<has_dependency>: [uid] .
+<is_assumed_by>: [uid] @reverse .
+
 
 type Project {
   name
   has_target
   has_domain
+  has_adpwn_modules
+  dgraph.type
+}
+
+type ADPwnModule {
+  attack_id
+  metric
+  name
+  version
+  author
+  last_run
+  has_dependency
+  is_assumed_by
   dgraph.type
 }
 
