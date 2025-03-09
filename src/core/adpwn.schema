@@ -1,5 +1,8 @@
 <name>: string @index(exact) .
 <has_target>: [uid] .
+<description>: string .
+<modified_at>: datetime .
+<created_at>: datetime .
 <belongs_to_project>: [uid] @reverse .
 <has_domain>: [uid] .
 <has_adpwn_modules>: [uid] .
@@ -14,6 +17,7 @@
 <password>: string .
 <ip_range>: string .
 <is_admin>: bool .
+<tags>: [string] .
 <attack_id>: string @index(exact) .
 <metric>: string .
 <version>: string .
@@ -25,7 +29,11 @@
 
 type Project {
   name
+  tags
+  description
   has_target
+  created_at
+  modified_at
   has_domain
   has_adpwn_modules
   dgraph.type

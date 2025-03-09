@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"ADPwn/core/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -18,7 +19,6 @@ func NewProjectHandler(projectService *service.ProjectService) *ProjectHandler {
 }
 
 func (h *ProjectHandler) GetProjectOverviews(c *gin.Context) {
-	// Verwende den Service
 	projects, err := h.projectService.GetOverviewForAll(c.Request.Context())
 	log.Println(*projects[0])
 	if err != nil {
@@ -28,9 +28,35 @@ func (h *ProjectHandler) GetProjectOverviews(c *gin.Context) {
 	c.JSON(http.StatusOK, projects)
 }
 
-// Weitere Handler-Methoden hier hinzufügen, z. B.:
+func (h *ProjectHandler) Get(c *gin.Context) {
+	uid := c.Param("projectUID")
+	if uid == "" {
+		fmt.Print("BAD REQUEST")
+		fmt.Println(uid)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Project UID is required",
+		})
+		return
+	}
+
+	project, err := h.projectService.Get(
+		c.Request.Context(),
+		uid,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to retrieve project",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, project)
+}
+
 func (h *ProjectHandler) AddDomainWithHosts(c *gin.Context) {
-	// Implementiere die Logik mit h.projectService
+	panic("implement me")
 }
 
 func (h *ProjectHandler) CreateProject(c *gin.Context) {
@@ -64,4 +90,8 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 		"uid":     projectUID,
 		"message": "Project created successfully",
 	})
+}
+
+func (h *ProjectHandler) UpdateProject(c *gin.Context) {
+	panic("implement me")
 }

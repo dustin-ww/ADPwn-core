@@ -14,6 +14,8 @@ func RegisterProjectHandlers(router *gin.Engine, projectService *service.Project
 	{
 		projectGroup.GET("/overviews", handler.GetProjectOverviews)
 		projectGroup.GET("/all", handler.GetProjectOverviews)
+		projectGroup.GET("/:projectUID", handler.Get)
+		projectGroup.PATCH("/:projectUID", handler.UpdateProject)
 		projectGroup.POST("/", handler.CreateProject)
 		projectGroup.POST("/:projectUID/domains", handler.AddDomainWithHosts)
 		projectGroup.POST("/:projectUID/targets", handler.AddDomainWithHosts)
