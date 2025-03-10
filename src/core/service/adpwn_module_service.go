@@ -1,9 +1,10 @@
+// ADPwn/core/service/adpwn_module_service.go
 package service
 
 import (
 	"ADPwn/core/internal/db"
 	"ADPwn/core/model"
-	"ADPwn/modules"
+	"ADPwn/core/plugin"
 	"fmt"
 	"github.com/dgraph-io/dgo/v210"
 	"strings"
@@ -25,18 +26,19 @@ func NewADPwnModuleService() (*ADPwnModuleService, error) {
 }
 
 func (s *ADPwnModuleService) GetAll() []*model.ADPwnModule {
-	loadedModule := modules.GlobalRegistry.GetModules()
+	loadedModule := plugin.GetAll()
 	var apiModules []*model.ADPwnModule
 
 	for _, module := range loadedModule {
 		uid := strings.ToLower(strings.ReplaceAll(module.GetName(), " ", "_")) + "_" + module.GetVersion()
 		apiModules = append(apiModules, &model.ADPwnModule{
-			UID:      uid,
-			AttackID: module.GetName(),
-			Metric:   module.GetExecutionMetric(),
-			Name:     module.GetName(),
-			Version:  module.GetVersion(),
-			Author:   module.GetAuthor(),
+			UID:         uid,
+			AttackID:    module.GetName(),
+			Metric:      module.GetExecutionMetric(),
+			Description: module.GetDescription(),
+			Name:        module.GetName(),
+			Version:     module.GetVersion(),
+			Author:      module.GetAuthor(),
 		})
 	}
 	return apiModules

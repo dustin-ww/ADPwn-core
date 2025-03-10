@@ -2,7 +2,7 @@ package enumeration
 
 import (
 	"ADPwn/core/model"
-	"ADPwn/modules"
+	"ADPwn/core/plugin"
 )
 
 type DNSExplorer struct {
@@ -43,11 +43,11 @@ func (n *DNSExplorer) Execute(project model.Project, options []string) error {
 // INIT
 func init() {
 	module := &NetworkExplorer{
-		Name:        "NetworkExploration",
-		Description: "ADPwn Module to enumerate ad network",
+		Name:        "DNS Exploration",
+		Description: "DNS Exploration",
 		Version:     "0.1",
-		Author:      "Dustin Wickert",
+		Author:      "dw-sec",
 	}
 
-	modules.GlobalRegistry.RegisterEnumerationModule(module)
+	plugin.RegisterEnumeration(module)
 }

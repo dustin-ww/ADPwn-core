@@ -2,7 +2,7 @@ package enumeration
 
 import (
 	"ADPwn/core/model"
-	"ADPwn/modules"
+	"ADPwn/core/plugin"
 )
 
 type NmapExplorer struct {
@@ -46,8 +46,8 @@ func init() {
 		Name:        "NetworkExploration",
 		Description: "ADPwn Module to enumerate ad network",
 		Version:     "0.1",
-		Author:      "Dustin Wickert",
+		Author:      "dw-sec",
 	}
 
-	modules.GlobalRegistry.RegisterEnumerationModule(module)
+	plugin.RegisterEnumeration(module)
 }

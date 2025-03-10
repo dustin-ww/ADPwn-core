@@ -4,8 +4,8 @@ import (
 	"ADPwn/adapter/serializable/nmap"
 	"ADPwn/adapter/tools"
 	"ADPwn/core/model"
+	"ADPwn/core/plugin" // Import plugin statt registry
 	"ADPwn/core/service"
-	"ADPwn/modules"
 	"fmt"
 )
 
@@ -156,11 +156,10 @@ func (n *NetworkExplorer) isDomainController(ports nmap.Ports) bool {
 func init() {
 	module := &NetworkExplorer{
 		Name:            "Network Exploration",
-		Description:     "ADPwn Module to enumerate ad network",
+		Description:     "Network Exploration",
 		Version:         "0.1",
-		Author:          "Dustin Wickert",
+		Author:          "dw-sec",
 		ExecutionMetric: "1h",
 	}
-	modules.GlobalRegistry.RegisterEnumerationModule(module)
-
+	plugin.RegisterEnumeration(module)
 }

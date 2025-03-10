@@ -1,4 +1,4 @@
-package modules
+package interfaces
 
 type ADPwnModule interface {
 	GetName() string

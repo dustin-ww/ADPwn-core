@@ -4,6 +4,8 @@ import (
 	"ADPwn/core/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
+
+	_ "ADPwn/modules/enumeration"
 )
 
 type ADPwnModuleHandler struct {
