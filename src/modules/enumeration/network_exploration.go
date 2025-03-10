@@ -3,23 +3,26 @@ package enumeration
 import (
 	"ADPwn/adapter/serializable/nmap"
 	"ADPwn/adapter/tools"
-	"ADPwn/cmd/logger"
 	"ADPwn/core/model"
 	"ADPwn/core/service"
-	"ADPwn/modules/internal/base"
+	"ADPwn/modules"
 	"fmt"
 )
 
 type NetworkExplorer struct {
-	Name           string
-	Description    string
-	Version        string
-	Author         string
-	Dependencies   []string
-	Modes          []string
-	Logger         *logger.ADPwnLogger
-	projectService *service.ProjectService
-	nmapAdapter    *adapter.NmapAdapter
+	Name            string
+	Description     string
+	Version         string
+	Author          string
+	ExecutionMetric string
+	Dependencies    []string
+	Modes           []string
+	projectService  *service.ProjectService
+	nmapAdapter     *adapter.NmapAdapter
+}
+
+func (n *NetworkExplorer) GetExecutionMetric() string {
+	return n.ExecutionMetric
 }
 
 func (n *NetworkExplorer) DependsOn() int {
@@ -45,10 +48,6 @@ func (n *NetworkExplorer) GetAuthor() string {
 
 func (n *NetworkExplorer) Execute(project model.Project, options []string) error {
 
-	n.Logger.Log("[*] Starting AD network enumeration")
-	n.Logger.Log(fmt.Sprintf("[*] Scanning project: %s", project.Name))
-	n.Logger.Log(fmt.Sprintf("[*] Options: %v", options))
-
 	nmapAdapter := adapter.NewNmapAdapter()
 	nmapOptions := []adapter.NmapOption{
 		adapter.FullScan,
@@ -56,14 +55,12 @@ func (n *NetworkExplorer) Execute(project model.Project, options []string) error
 
 	projectAddressList, err := project.TargetsAsAddressList()
 	if err != nil {
-		n.Logger.Log(fmt.Sprintf("[*] Error getting target addresses: %s", err.Error()))
 		fmt.Println("Error getting target addresses")
 		return err
 	}
 	_, err = nmapAdapter.RunCommand(projectAddressList, nmapOptions)
 
 	if err != nil {
-		n.Logger.Log(fmt.Sprintf("[*] Error running command: %s", err.Error()))
 		fmt.Println("Error running command")
 	}
 
@@ -81,7 +78,6 @@ func (n *NetworkExplorer) buildHosts(project model.Project, result nmap.Result) 
 
 	for _, host := range result.Host {
 
-		n.Logger.Log("[*] New Host discovered!")
 		hostBuilder := model.NewHostBuilder()
 
 		if n.isDomainController(host.Ports) {
@@ -106,13 +102,11 @@ func (n *NetworkExplorer) buildServices(host nmap.Host) ([]model.Service, error)
 
 	for _, port := range host.Ports.Port {
 		if port.State.State == "open" {
-			n.Logger.Log("[*] New Service discovered!")
 			serviceBuilder := model.NewServiceBuilder()
 			serviceBuilder.WithName(port.Service.Name)
 			serviceBuilder.WithPort(port.Portid)
 			buildService, err := serviceBuilder.Build()
 			if err != nil {
-				n.Logger.Log(fmt.Sprintf("[*] Error building service: %s", err.Error()))
 				return nil, err
 			}
 			services = append(services, *buildService)
@@ -161,10 +155,12 @@ func (n *NetworkExplorer) isDomainController(ports nmap.Ports) bool {
 // INIT
 func init() {
 	module := &NetworkExplorer{
-		Name:        "NetworkExploration",
-		Description: "ADPwn Module to enumerate ad network",
-		Version:     "0.1",
-		Author:      "Dustin Wickert",
+		Name:            "Network Exploration",
+		Description:     "ADPwn Module to enumerate ad network",
+		Version:         "0.1",
+		Author:          "Dustin Wickert",
+		ExecutionMetric: "1h",
 	}
-	base.GlobalRegistry.RegisterEnumerationModule(module)
+	modules.GlobalRegistry.RegisterEnumerationModule(module)
+
 }

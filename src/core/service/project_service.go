@@ -1,95 +1,141 @@
 package service
 
 import (
-	"ADPwn/core/internal/repository"
+	"ADPwn/core/internal/db"
 	"ADPwn/core/internal/utils"
 	"ADPwn/core/model"
 	"context"
+	"fmt"
+	"log"
+
+	"ADPwn/core/internal/repository"
+
 	"github.com/dgraph-io/dgo/v210"
 )
 
+// ProjectService handles business logic for projects
 type ProjectService struct {
 	projectRepo repository.ProjectRepository
 	domainRepo  repository.DomainRepository
 	hostRepo    repository.HostRepository
 	targetRepo  repository.TargetRepository
-	DB          *dgo.Dgraph
+	db          *dgo.Dgraph
 }
 
+// NewProjectService creates a new ProjectService instance
 func NewProjectService() (*ProjectService, error) {
-	DB, err := utils.GetDB()
+	db, err := db.GetDB()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get database connection: %w", err)
 	}
-
-	projectRepo := repository.NewDgraphProjectRepository(DB)
-	domainRepo := repository.NewDgraphDomainRepository(DB)
-	hostRepo := repository.NewDgraphHostRepository(DB)
-	targetRepo := repository.NewDgraphTargetRepository(DB)
 
 	return &ProjectService{
-		projectRepo: projectRepo,
-		domainRepo:  domainRepo,
-		hostRepo:    hostRepo,
-		targetRepo:  targetRepo}, nil
+		db:          db,
+		projectRepo: repository.NewDgraphProjectRepository(),
+		domainRepo:  repository.NewDgraphDomainRepository(db),
+		hostRepo:    repository.NewDgraphHostRepository(db),
+		targetRepo:  repository.NewDgraphTargetRepository(db),
+	}, nil
 }
 
-func (s *ProjectService) AddDomainWithHosts(ctx context.Context, projectUID string, domainName string, hosts []string) error {
-	tx := s.DB.NewTxn()
-	defer tx.Discard(ctx)
-
-	// 1. Create Domain
-	domainUID, err := s.domainRepo.Create(ctx, domainName)
-	if err != nil {
-		return err
-	}
-
-	// 2. Connect domain with project
-	if err := s.projectRepo.AddDomain(ctx, projectUID, domainUID); err != nil {
-		return err
-	}
-
-	// Create and connect hosts
-	for _, ip := range hosts {
-		hostUID, err := s.hostRepo.Create(ctx, ip)
+// AddDomainWithHosts adds a domain with associated hosts to a project.
+func (s *ProjectService) AddDomainWithHosts(ctx context.Context, projectUID, domainName string, hosts []string) error {
+	return db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
+		domainUID, err := s.domainRepo.Create(ctx, domainName)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create domain: %w", err)
 		}
 
-		if err := s.domainRepo.AddHost(ctx, domainUID, hostUID); err != nil {
-			return err
+		if err := s.projectRepo.AddDomain(ctx, tx, projectUID, domainUID); err != nil {
+			return fmt.Errorf("failed to link domain: %w", err)
 		}
-	}
 
-	return tx.Commit(ctx)
+		for _, ip := range hosts {
+			hostUID, err := s.hostRepo.Create(ctx, ip)
+			if err != nil {
+				return fmt.Errorf("failed to create host %s: %w", ip, err)
+			}
+			if err := s.domainRepo.AddHost(ctx, domainUID, hostUID); err != nil {
+				return fmt.Errorf("failed to link host: %w", err)
+			}
+		}
+		return nil
+	})
 }
 
-func (s *ProjectService) AddTarget(ctx context.Context, projectUID string, targetIp string) error {
-	tx := s.DB.NewTxn()
-	defer tx.Discard(ctx)
+// CreateTarget creates a new target and links it to a project.
+func (s *ProjectService) CreateTarget(ctx context.Context, projectUID, targetIP, name string) (string, error) {
+	var targetUID string
+	err := db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
+		var err error
+		targetUID, err = s.targetRepo.Create(ctx, tx, targetIP, name)
+		if err != nil {
+			return fmt.Errorf("target creation failed: %w", err)
+		}
+		log.Println("Target created:", targetUID)
 
-	// 1. Create target
-	targetUID, err := s.targetRepo.Create(ctx, targetIp)
-	if err != nil {
-		return err
-	}
-
-	// 2. Add target to project
-	if err := s.projectRepo.AddTarget(ctx, projectUID, targetUID); err != nil {
-		return err
-	}
-
-	return tx.Commit(ctx)
+		if err := s.projectRepo.AddTarget(ctx, tx, projectUID, targetUID); err != nil {
+			return fmt.Errorf("linking failed: %w", err)
+		}
+		return nil
+	})
+	return targetUID, err
 }
 
+// Create creates a new project.
 func (s *ProjectService) Create(ctx context.Context, name string) (string, error) {
-	return s.projectRepo.Create(ctx, name)
+	var projectUID string
+	err := db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
+		var err error
+		projectUID, err = s.projectRepo.Create(ctx, tx, name)
+		if err != nil {
+			return fmt.Errorf("failed to create project: %w", err)
+		}
+		return nil
+	})
+	return projectUID, err
 }
 
+// GetOverviewForAll retrieves overview information for all projects.
 func (s *ProjectService) GetOverviewForAll(ctx context.Context) ([]*model.Project, error) {
-	return s.projectRepo.GetAllOverview(ctx)
+	return db.ExecuteRead(ctx, s.db, func(tx *dgo.Txn) ([]*model.Project, error) {
+		return s.projectRepo.GetAllOverview(ctx, tx)
+	})
 }
 
+// Get retrieves a project by its UID.
 func (s *ProjectService) Get(ctx context.Context, projectUID string) (*model.Project, error) {
-	return s.projectRepo.Get(ctx, projectUID)
+	return db.ExecuteRead(ctx, s.db, func(tx *dgo.Txn) (*model.Project, error) {
+		return s.projectRepo.Get(ctx, tx, projectUID)
+	})
+}
+
+// UpdateFields updates specified fields of a project.
+func (s *ProjectService) UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error {
+	if uid == "" {
+		return utils.ErrUIDRequired
+	}
+
+	allowed := map[string]bool{"name": true, "description": true}
+	protected := map[string]bool{"uid": true, "created_at": true, "updated_at": true, "type": true}
+
+	for field := range fields {
+		if protected[field] {
+			return fmt.Errorf("%w: %s", utils.ErrFieldProtected, field)
+		}
+		if !allowed[field] {
+			return fmt.Errorf("%w: %s", utils.ErrFieldNotAllowed, field)
+		}
+	}
+
+	return db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
+		return s.projectRepo.UpdateFields(ctx, tx, uid, fields)
+	})
+}
+
+// GetTargets retrieves all targets associated with a project.
+func (s *ProjectService) GetTargets(ctx context.Context, projectUID string) ([]*model.Target, error) {
+	return db.ExecuteRead(ctx, s.db, func(tx *dgo.Txn) ([]*model.Target, error) {
+		return s.projectRepo.GetTargets(ctx, tx, projectUID)
+	})
 }

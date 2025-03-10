@@ -10,7 +10,7 @@ import (
 
 type TargetRepository interface {
 	//CRUD
-	Create(ctx context.Context, ipRange string) (string, error) // Returns UID
+	Create(ctx context.Context, tx *dgo.Txn, ipRange string, name string) (string, error) // Returns UID
 	UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error
 }
 
@@ -22,34 +22,29 @@ func NewDgraphTargetRepository(db *dgo.Dgraph) *DraphTargetRepository {
 	return &DraphTargetRepository{DB: db}
 }
 
-func (r *DraphTargetRepository) Create(ctx context.Context, ipRange string) (string, error) {
-	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
-
-	projectData := map[string]interface{}{
+func (r *DraphTargetRepository) Create(ctx context.Context, tx *dgo.Txn, ipRange string, name string) (string, error) {
+	// Füge eine explizite Blank Node UID hinzu
+	target := map[string]interface{}{
+		"uid":         "_:newTarget", // Wichtig: Blank Node Identifier
+		"name":        name,
 		"ip_range":    ipRange,
 		"dgraph.type": "Target",
 	}
 
-	jsonData, err := json.Marshal(projectData)
+	targetJson, err := json.Marshal(target)
 	if err != nil {
 		return "", fmt.Errorf("marshal error: %w", err)
 	}
 
 	mu := &api.Mutation{
-		SetJson: jsonData,
+		SetJson: targetJson,
 	}
-
-	assigned, err := txn.Mutate(ctx, mu)
+	assigned, err := tx.Mutate(ctx, mu)
 	if err != nil {
 		return "", fmt.Errorf("mutation error: %w", err)
 	}
 
-	if err := txn.Commit(ctx); err != nil {
-		return "", fmt.Errorf("commit error: %w", err)
-	}
-
-	return assigned.Uids["blank-0"], nil
+	return assigned.Uids["newTarget"], nil
 }
 
 func (r *DraphTargetRepository) UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error {

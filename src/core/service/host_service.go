@@ -1,8 +1,8 @@
 package service
 
 import (
+	"ADPwn/core/internal/db"
 	"ADPwn/core/internal/repository"
-	"ADPwn/core/internal/utils"
 	"ADPwn/core/model"
 	"context"
 	"github.com/dgraph-io/dgo/v210"
@@ -15,7 +15,7 @@ type HostService struct {
 }
 
 func NewHostService() (*HostService, error) {
-	DB, err := utils.GetDB()
+	DB, err := db.GetDB()
 	if err != nil {
 		return nil, err
 	}

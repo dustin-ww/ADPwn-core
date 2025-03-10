@@ -1,8 +1,8 @@
 package service
 
 import (
+	"ADPwn/core/internal/db"
 	"ADPwn/core/internal/repository"
-	"ADPwn/core/internal/utils"
 	"github.com/dgraph-io/dgo/v210"
 )
 
@@ -12,7 +12,7 @@ type DomainService struct {
 }
 
 func NewDomainService() (*DomainService, error) {
-	DB, err := utils.GetDB()
+	DB, err := db.GetDB()
 	if err != nil {
 		return nil, err
 	}

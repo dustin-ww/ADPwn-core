@@ -3,25 +3,21 @@ package model
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 type Project struct {
-	UID       string   `json:"uid,omitempty"`
-	Name      string   `json:"name,omitempty"`
-	HasTarget []Target `json:"has_target,omitempty"`
-	HasDomain []Domain `json:"has_domain,omitempty"`
-	DType     []string `json:"dgraph.type,omitempty"`
+	UID         string    `json:"uid,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Tags        []string  `json:"tags,omitempty"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"createdAt,omitempty"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
+	HasTarget   []Target  `json:"has_target,omitempty"`
+	HasDomain   []Domain  `json:"has_domain,omitempty"`
+	DType       []string  `json:"dgraph.type,omitempty"`
 }
 
-func NewProject(name string) *Project {
-
-	return &Project{
-		Name:  name,
-		DType: []string{"project"},
-	}
-}
-
-// TODO: Fixen
 func (p *Project) TargetsAsAddressList() ([]string, error) {
 	var unifiedIPs []string
 

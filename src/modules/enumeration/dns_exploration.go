@@ -1,10 +1,8 @@
 package enumeration
 
 import (
-	"ADPwn/cmd/logger"
 	"ADPwn/core/model"
-	"ADPwn/modules/internal/base"
-	"fmt"
+	"ADPwn/modules"
 )
 
 type DNSExplorer struct {
@@ -14,7 +12,6 @@ type DNSExplorer struct {
 	Author       string
 	Dependencies []string
 	Modes        []string
-	Logger       *logger.ADPwnLogger
 }
 
 func (n *DNSExplorer) DependsOn() int {
@@ -40,10 +37,6 @@ func (n *DNSExplorer) GetAuthor() string {
 
 func (n *DNSExplorer) Execute(project model.Project, options []string) error {
 
-	n.Logger.Log("[*] Starting AD network enumeration")
-	n.Logger.Log(fmt.Sprintf("[*] Scanning project: %s", project.Name))
-	n.Logger.Log(fmt.Sprintf("[*] Options: %v", options))
-
 	return nil
 }
 
@@ -56,5 +49,5 @@ func init() {
 		Author:      "Dustin Wickert",
 	}
 
-	base.GlobalRegistry.RegisterEnumerationModule(module)
+	modules.GlobalRegistry.RegisterEnumerationModule(module)
 }

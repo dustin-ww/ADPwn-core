@@ -5,39 +5,43 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
 )
 
+// ProjectRepository defines operations for project data access
 type ProjectRepository interface {
-	//CRUD
-	Create(ctx context.Context, name string) (string, error) // Returns UID
-	Get(ctx context.Context, uid string) (*model.Project, error)
-	GetAll(ctx context.Context) ([]*model.Project, error)
-	GetAllOverview(ctx context.Context) ([]*model.Project, error)
-	UpdateName(ctx context.Context, uid, newName string) error
-	Delete(ctx context.Context, uid string) error
-	UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error
-	//Relations
-	AddDomain(ctx context.Context, projectUID, domainUID string) error
-	AddTarget(ctx context.Context, projectUID, targetUID string) error
+	// CRUD operations
+	Create(ctx context.Context, tx *dgo.Txn, name string) (string, error)
+	Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Project, error)
+	GetAll(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error)
+	GetAllOverview(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error)
+	GetTargets(ctx context.Context, tx *dgo.Txn, uid string) ([]*model.Target, error)
+	UpdateName(ctx context.Context, tx *dgo.Txn, uid, newName string) error
+	Delete(ctx context.Context, tx *dgo.Txn, uid string) error
+	UpdateFields(ctx context.Context, tx *dgo.Txn, uid string, fields map[string]interface{}) error
+
+	// Relation operations
+	AddDomain(ctx context.Context, tx *dgo.Txn, projectUID, domainUID string) error
+	AddTarget(ctx context.Context, tx *dgo.Txn, projectUID, targetUID string) error
 }
 
-type DgraphProjectRepository struct {
-	DB *dgo.Dgraph
+// DgraphProjectRepository implements ProjectRepository using Dgraph
+type DgraphProjectRepository struct{}
+
+// NewDgraphProjectRepository creates a new Dgraph project repository
+func NewDgraphProjectRepository() *DgraphProjectRepository {
+	return &DgraphProjectRepository{}
 }
 
-func NewDgraphProjectRepository(db *dgo.Dgraph) *DgraphProjectRepository {
-	return &DgraphProjectRepository{DB: db}
-}
-
-func (r *DgraphProjectRepository) Create(ctx context.Context, name string) (string, error) {
-	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
-
+// Create adds a new project to the database
+func (r *DgraphProjectRepository) Create(ctx context.Context, tx *dgo.Txn, name string) (string, error) {
 	projectData := map[string]interface{}{
 		"name":        name,
 		"dgraph.type": "Project",
+		"created_at":  time.Now(),
 	}
 
 	jsonData, err := json.Marshal(projectData)
@@ -49,24 +53,25 @@ func (r *DgraphProjectRepository) Create(ctx context.Context, name string) (stri
 		SetJson: jsonData,
 	}
 
-	assigned, err := txn.Mutate(ctx, mu)
+	assigned, err := tx.Mutate(ctx, mu)
 	if err != nil {
 		return "", fmt.Errorf("mutation error: %w", err)
-	}
-
-	if err := txn.Commit(ctx); err != nil {
-		return "", fmt.Errorf("commit error: %w", err)
 	}
 
 	return assigned.Uids["blank-0"], nil
 }
 
-func (r *DgraphProjectRepository) Get(ctx context.Context, uid string) (*model.Project, error) {
+// Get retrieves a project by UID
+func (r *DgraphProjectRepository) Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Project, error) {
 	query := `
         query Project($uid: string) {
             project(func: uid($uid)) {
                 uid
                 name
+                tags
+                created_at
+                modified_at
+                description
                 has_domain {
                     uid
                     name
@@ -88,32 +93,80 @@ func (r *DgraphProjectRepository) Get(ctx context.Context, uid string) (*model.P
                 has_target {
                     uid
                     ip_range
+                    name
                 }
             }
         }
     `
 
 	vars := map[string]string{"$uid": uid}
-	res, err := r.DB.NewTxn().QueryWithVars(ctx, query, vars)
+	res, err := tx.QueryWithVars(ctx, query, vars)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("query error: %w", err)
 	}
 
 	var result struct {
 		Project []model.Project `json:"project"`
 	}
 	if err := json.Unmarshal(res.Json, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal error: %w", err)
 	}
 
 	if len(result.Project) == 0 {
-		return nil, fmt.Errorf("project not found")
+		return nil, fmt.Errorf("project not found: %s", uid)
 	}
 
 	return &result.Project[0], nil
 }
 
-func (r *DgraphProjectRepository) GetAll(ctx context.Context) ([]*model.Project, error) {
+// GetTargets retrieves all targets for a project
+func (r *DgraphProjectRepository) GetTargets(ctx context.Context, tx *dgo.Txn, uid string) ([]*model.Target, error) {
+	query := `
+        query Project($uid: string) {
+            project(func: uid($uid)) @filter(eq(dgraph.type, "Project")) {
+                uid
+                has_target {
+                    uid
+                    ip_range
+                    name
+                    dgraph.type
+                }
+            }
+        }
+    `
+
+	vars := map[string]string{"$uid": uid}
+	res, err := tx.QueryWithVars(ctx, query, vars)
+	if err != nil {
+		return nil, fmt.Errorf("query error: %w", err)
+	}
+
+	var result struct {
+		Project []struct {
+			UID       string          `json:"uid"`
+			HasTarget []*model.Target `json:"has_target"`
+		} `json:"project"`
+	}
+
+	if err := json.Unmarshal(res.Json, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %w", err)
+	}
+
+	if len(result.Project) == 0 {
+		return nil, fmt.Errorf("project not found: %s", uid)
+	}
+
+	targets := result.Project[0].HasTarget
+
+	if targets == nil {
+		return []*model.Target{}, nil
+	}
+
+	return targets, nil
+}
+
+// GetAll retrieves all projects with full details
+func (r *DgraphProjectRepository) GetAll(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error) {
 	query := `
         {
             allProjects(func: type(Project)) {
@@ -145,10 +198,9 @@ func (r *DgraphProjectRepository) GetAll(ctx context.Context) ([]*model.Project,
         }
     `
 
-	txn := r.DB.NewReadOnlyTxn()
-	resp, err := txn.Query(ctx, query)
+	resp, err := tx.Query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("error querying Dgraph: %v", err)
+		return nil, fmt.Errorf("query error: %w", err)
 	}
 
 	var response struct {
@@ -156,27 +208,31 @@ func (r *DgraphProjectRepository) GetAll(ctx context.Context) ([]*model.Project,
 	}
 
 	if err := json.Unmarshal(resp.Json, &response); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response: %v", err)
+		return nil, fmt.Errorf("unmarshal error: %w", err)
 	}
 
 	return response.Projects, nil
 }
 
-func (r *DgraphProjectRepository) GetAllOverview(ctx context.Context) ([]*model.Project, error) {
+// GetAllOverview retrieves all projects with basic information
+func (r *DgraphProjectRepository) GetAllOverview(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error) {
 	query := `
         {
             allProjects(func: type(Project)) {
                 uid
                 name
                 type
+                description
+                modified_at
+                created_at
+                tags
             }
         }
     `
 
-	txn := r.DB.NewReadOnlyTxn()
-	resp, err := txn.Query(ctx, query)
+	resp, err := tx.Query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("error querying Dgraph: %v", err)
+		return nil, fmt.Errorf("query error: %w", err)
 	}
 
 	var response struct {
@@ -184,14 +240,16 @@ func (r *DgraphProjectRepository) GetAllOverview(ctx context.Context) ([]*model.
 	}
 
 	if err := json.Unmarshal(resp.Json, &response); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response: %v", err)
+		return nil, fmt.Errorf("unmarshal error: %w", err)
 	}
 
 	return response.Projects, nil
 }
 
-func (r *DgraphProjectRepository) UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error {
+// UpdateFields updates specified fields on a project
+func (r *DgraphProjectRepository) UpdateFields(ctx context.Context, tx *dgo.Txn, uid string, fields map[string]interface{}) error {
 	fields["uid"] = uid
+	fields["updated_at"] = time.Now().Format(time.RFC3339)
 
 	updateJSON, err := json.Marshal(fields)
 	if err != nil {
@@ -202,110 +260,81 @@ func (r *DgraphProjectRepository) UpdateFields(ctx context.Context, uid string, 
 		SetJson: updateJSON,
 	}
 
-	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
-
-	_, err = txn.Mutate(ctx, mu)
+	_, err = tx.Mutate(ctx, mu)
 	if err != nil {
 		return fmt.Errorf("mutation error: %w", err)
 	}
-
-	return txn.Commit(ctx)
+	return nil
 }
 
-func (r *DgraphProjectRepository) Delete(ctx context.Context, uid string) error {
-	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
-
-	deleteProjectQuery := `{
-		"uid": "` + uid + `",
-		"name": null
-	}`
+// Delete removes a project by UID
+func (r *DgraphProjectRepository) Delete(ctx context.Context, tx *dgo.Txn, uid string) error {
+	deleteQuery := fmt.Sprintf(`{"uid": "%s", "name": null}`, uid)
 
 	mutation := &api.Mutation{
-		CommitNow:  true,
-		DeleteJson: []byte(deleteProjectQuery),
+		DeleteJson: []byte(deleteQuery),
 	}
 
-	_, err := txn.Mutate(context.Background(), mutation)
-
-	return fmt.Errorf("error while deleting project in mutation: %w", err)
-}
-
-// TODO
-func (r *DgraphProjectRepository) UpdateName(ctx context.Context, uid, newName string) error {
-	panic("Not yet implemented")
-}
-
-func (r *DgraphProjectRepository) AddDomain(ctx context.Context, projectUID, domainUID string) error {
-	txn := r.DB.NewTxn()
-	defer txn.Discard(ctx)
-
-	mu := &api.Mutation{
-		SetNquads: []byte(fmt.Sprintf(
-			`<%s> <has_domain> <%s> .`,
-			projectUID, domainUID,
-		)),
-	}
-
-	_, err := txn.Mutate(ctx, mu)
+	_, err := tx.Mutate(ctx, mutation)
 	if err != nil {
 		return fmt.Errorf("mutation error: %w", err)
 	}
 
-	return txn.Commit(ctx)
+	return nil
 }
 
-// TODO
-func (r *DgraphProjectRepository) AddTarget(ctx context.Context, projectUID, targetUID string) error {
-	panic("Not yet implemented")
-}
+// UpdateName updates a project's name
+func (r *DgraphProjectRepository) UpdateName(ctx context.Context, tx *dgo.Txn, uid, newName string) error {
+	update := map[string]interface{}{
+		"uid":  uid,
+		"name": newName,
+	}
 
-/*// Service-Layer: Transaktion für atomare Erstellung
-func (s *ProjectService) CreateFullProject(ctx context.Context, name string, domains []DomainConfig) (*model.Project, error) {
-	txn := s.db.NewTxn()
-	defer txn.Discard(ctx)
-
-	// 1. Projekt erstellen
-	projectUID, err := s.projectRepo.Create(ctx, name)
+	updateJSON, err := json.Marshal(update)
 	if err != nil {
-		return nil, fmt.Errorf("project creation failed: %w", err)
+		return fmt.Errorf("marshal error: %w", err)
 	}
 
-	// 2. Domains + Unterentitäten hinzufügen
-	for _, domainCfg := range domains {
-		domainUID, err := s.domainRepo.Create(ctx, domainCfg.Name)
-		if err != nil {
-			return nil, fmt.Errorf("domain creation failed: %w", err)
-		}
-
-		// Domain mit Projekt verknüpfen
-		if err := s.projectRepo.AddDomain(ctx, projectUID, domainUID); err != nil {
-			return nil, err
-		}
-
-		// Hosts zur Domain hinzufügen
-		for _, hostIP := range domainCfg.Hosts {
-			hostUID, err := s.hostRepo.Create(ctx, hostIP)
-			if err != nil {
-				return nil, err
-			}
-			if err := s.domainRepo.AddHost(ctx, domainUID, hostUID); err != nil {
-				return nil, err
-			}
-		}
+	mu := &api.Mutation{
+		SetJson: updateJSON,
 	}
 
-	// 3. Transaktion commiten
-	if err := txn.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("transaction failed: %w", err)
+	_, err = tx.Mutate(ctx, mu)
+	if err != nil {
+		return fmt.Errorf("mutation error: %w", err)
 	}
 
-	return s.projectRepo.GetFull(ctx, projectUID)
+	return nil
 }
 
+// AddDomain connects a domain to a project
+func (r *DgraphProjectRepository) AddDomain(ctx context.Context, tx *dgo.Txn, projectUID, domainUID string) error {
+	nquad := fmt.Sprintf(`<%s> <has_domain> <%s> .`, projectUID, domainUID)
 
-err := projectRepo.UpdateFields(ctx, "0x123", map[string]interface{}{
-"description": "New project details",
-"status":      "active",
-})*/
+	mu := &api.Mutation{
+		SetNquads: []byte(nquad),
+	}
+
+	_, err := tx.Mutate(ctx, mu)
+	if err != nil {
+		return fmt.Errorf("mutation error: %w", err)
+	}
+
+	return nil
+}
+
+// AddTarget connects a target to a project
+func (r *DgraphProjectRepository) AddTarget(ctx context.Context, tx *dgo.Txn, projectUID, targetUID string) error {
+	nquad := fmt.Sprintf(`<%s> <has_target> <%s> .`, projectUID, targetUID)
+
+	mu := &api.Mutation{
+		SetNquads: []byte(nquad),
+	}
+
+	_, err := tx.Mutate(ctx, mu)
+	if err != nil {
+		return fmt.Errorf("mutation error: %w", err)
+	}
+
+	return nil
+}

@@ -8,6 +8,7 @@ import (
 
 type ADPwnModuleRepository interface {
 	//CRUD
+	GetAll(ctx context.Context, tx *dgo.Txn) ([]model.Project, error)
 	Create(ctx context.Context, name string) (string, error) // Returns UID
 	CreateWithObject(ctx context.Context, module model.ADPwnModule) (string, error)
 	Get(ctx context.Context, uid string) (*model.ADPwnModule, error)

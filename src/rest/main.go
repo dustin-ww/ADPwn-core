@@ -14,7 +14,7 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3000/"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -34,11 +34,13 @@ func main() {
 	})
 
 	projectService, err := service.NewProjectService()
+	adpwnModuleService, err := service.NewADPwnModuleService()
 	if err != nil {
 		log.Fatalf("Failed to initialize ProjectService: %v", err)
 	}
 
 	routes.RegisterProjectHandlers(router, projectService)
+	routes.RegisterADPwnModuleHandlers(router, adpwnModuleService)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
