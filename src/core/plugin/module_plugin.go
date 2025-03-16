@@ -1,6 +1,8 @@
 package plugin
 
-import "ADPwn/core/interfaces"
+import (
+	"ADPwn/core/interfaces"
+)
 
 type Registry struct {
 	enumerationModules []interfaces.ADPwnModule
@@ -23,4 +25,12 @@ func RegisterAttack(module interfaces.ADPwnModule) {
 // GetAll gibt alle registrierten Module zurück
 func GetAll() []interfaces.ADPwnModule {
 	return append(GlobalRegistry.attackModules, GlobalRegistry.enumerationModules...)
+}
+
+func GetAllEnumerations() []interfaces.ADPwnModule {
+	return GlobalRegistry.enumerationModules
+}
+
+func GetAllAttacks() []interfaces.ADPwnModule {
+	return GlobalRegistry.attackModules
 }

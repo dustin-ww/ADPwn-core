@@ -32,11 +32,26 @@ services:
     networks:
       - adpwn_network
 
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "adpwn"
+      POSTGRES_USER: "adpwn"
+      POSTGRES_PASSWORD: "adpwn"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - adpwn_network
+    restart: on-failure
+
 networks:
   adpwn_network:
     driver: bridge
-    internal: true  
+    internal: true
 
 volumes:
   zero_datav5:
   alpha_datav5:
+  postgres_data:

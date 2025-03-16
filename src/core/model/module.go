@@ -9,6 +9,7 @@ type ADPwnModule struct {
 	Version     string   `json:"version,omitempty"`
 	Author      string   `json:"author,omitempty"`
 	DType       []string `json:"dgraph.type,omitempty"`
+	IsAttack    bool     `json:"is_attack,omitempty"`
 }
 
 type ADPwnModuleMetadata struct {

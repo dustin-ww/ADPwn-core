@@ -27,7 +27,7 @@ func GetDB() (*dgo.Dgraph, error) {
 		)
 		var err error
 
-		conn, err := grpc.Dial("localhost:9080", dialOpts...)
+		conn, err := grpc.NewClient("localhost:9080", dialOpts...)
 		if err != nil {
 			dbErr = err
 			log.Fatal(err)
@@ -43,7 +43,6 @@ func GetDB() (*dgo.Dgraph, error) {
 	return db, nil
 }
 
-// ExecuteInTransaction kapselt die Logik, eine schreibende Transaktion zu starten, auszuführen und zu committen.
 func ExecuteInTransaction(ctx context.Context, db *dgo.Dgraph, op func(tx *dgo.Txn) error) error {
 	tx := db.NewTxn()
 	defer tx.Discard(ctx)
@@ -58,7 +57,6 @@ func ExecuteInTransaction(ctx context.Context, db *dgo.Dgraph, op func(tx *dgo.T
 	return nil
 }
 
-// ExecuteRead ist eine generische Funktion, die eine Leseoperation in einer Read-Only-Transaktion ausführt.
 func ExecuteRead[T any](ctx context.Context, db *dgo.Dgraph, op func(tx *dgo.Txn) (T, error)) (T, error) {
 	tx := db.NewReadOnlyTxn()
 	defer tx.Discard(ctx)

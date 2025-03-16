@@ -2,6 +2,7 @@
 package service
 
 import (
+	"ADPwn/core/interfaces"
 	"ADPwn/core/internal/db"
 	"ADPwn/core/model"
 	"ADPwn/core/plugin"
@@ -26,12 +27,28 @@ func NewADPwnModuleService() (*ADPwnModuleService, error) {
 }
 
 func (s *ADPwnModuleService) GetAll() []*model.ADPwnModule {
-	loadedModule := plugin.GetAll()
-	var apiModules []*model.ADPwnModule
+	enumerationModules := convertToModel(plugin.GetAllEnumerations(), false)
+	attackModules := convertToModel(plugin.GetAllAttacks(), true)
+	allModules := append(enumerationModules, attackModules...)
+	return allModules
+}
 
-	for _, module := range loadedModule {
+func (*ADPwnModuleService) Run(uid string) error {
+	allModules := plugin.GetAll()
+	for _, module := range allModules {
+		moduleUID := strings.ToLower(strings.ReplaceAll(module.GetName(), " ", "_")) + "_" + module.GetVersion()
+		if uid == moduleUID {
+			//TODO
+		}
+	}
+	return nil
+}
+
+func convertToModel(loadedModules []interfaces.ADPwnModule, isAttack bool) []*model.ADPwnModule {
+	var apiModules []*model.ADPwnModule
+	for _, module := range loadedModules {
 		uid := strings.ToLower(strings.ReplaceAll(module.GetName(), " ", "_")) + "_" + module.GetVersion()
-		apiModules = append(apiModules, &model.ADPwnModule{
+		modul := &model.ADPwnModule{
 			UID:         uid,
 			AttackID:    module.GetName(),
 			Metric:      module.GetExecutionMetric(),
@@ -39,7 +56,9 @@ func (s *ADPwnModuleService) GetAll() []*model.ADPwnModule {
 			Name:        module.GetName(),
 			Version:     module.GetVersion(),
 			Author:      module.GetAuthor(),
-		})
+			IsAttack:    isAttack,
+		}
+		apiModules = append(apiModules, modul)
 	}
 	return apiModules
 }

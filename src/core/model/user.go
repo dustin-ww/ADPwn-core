@@ -9,13 +9,3 @@ type User struct {
 	BelongsToDomain Domain   `json:"belongs_to_domain,omitempty"`
 	DType           []string `json:"dgraph.type,omitempty"`
 }
-
-func NewUser(username string, password string, ntlmHash string, isAdmin bool) *User {
-	return &User{
-		Name:     username,
-		NTLMHash: ntlmHash,
-		Password: password,
-		IsAdmin:  isAdmin,
-		DType:    []string{"User"},
-	}
-}

@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 
+	_ "ADPwn/modules/attacks"
 	_ "ADPwn/modules/enumeration"
 )
 
