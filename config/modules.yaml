@@ -1,0 +1,35 @@
+# Registered Enumeration Modules
+enumeration:
+    # Network Explorer
+    NetworkExplorer:
+      name: "Network Explorer ng"
+      attack_id: "enum01"
+      version: "0.1"
+      description: "Das ist ein Test"
+      author: "dw-sec"
+      execution_metric: "4h"
+      inherits:
+      loot_path: "/loot/nmap"
+    # DNS Explorer
+    DNSExplorer:
+      name: "DNS Explorer ng"
+      attack_id: "enum02"
+      version: "0.1"
+      description: "DNS Cool"
+      author: "dw-sec"
+      execution_metric: "4h"
+      inherits:
+      loot_path: "/loot/dns"
+
+# Registered Attack Modules
+attack:
+    PrinterNightmare:
+      name: "Printer Nightmare Attack"
+      attack_id: "attack01"
+      version: "0.1"
+      description: "Very first AD Attack"
+      author: "dw-sec"
+      inherits:
+        - NetworkExplorer
+        - DNSExplorer
+      loot_path: "/loot/pn"

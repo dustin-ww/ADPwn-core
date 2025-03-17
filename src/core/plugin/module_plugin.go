@@ -1,36 +1,46 @@
 package plugin
 
 import (
+	"ADPwn/adapter/config"
 	"ADPwn/core/interfaces"
+	"ADPwn/core/model/adpwn"
+	"ADPwn/core/service"
+	"context"
+	"fmt"
 )
 
 type Registry struct {
-	enumerationModules []interfaces.ADPwnModule
-	attackModules      []interfaces.ADPwnModule
+	modules []*adpwn.Module
 }
 
 var GlobalRegistry = &Registry{
-	enumerationModules: make([]interfaces.ADPwnModule, 0),
-	attackModules:      make([]interfaces.ADPwnModule, 0),
+	modules: make([]*adpwn.Module, 0),
 }
 
-func RegisterEnumeration(module interfaces.ADPwnModule) {
-	GlobalRegistry.enumerationModules = append(GlobalRegistry.enumerationModules, module)
+func RegisterPlugin(module interfaces.ADPwnModule) {
+	modules, inherits, err := config.ModuleFromConfig(module.GetConfigKey())
+	if err != nil {
+		panic("register plugin fail:" + err.Error())
+	}
+	GlobalRegistry.modules = append(GlobalRegistry.modules, modules)
+	handoverToService(modules, inherits)
 }
 
-func RegisterAttack(module interfaces.ADPwnModule) {
-	GlobalRegistry.attackModules = append(GlobalRegistry.attackModules, module)
+func GetAll() []*adpwn.Module {
+	return GlobalRegistry.modules
 }
 
-// GetAll gibt alle registrierten Module zurück
-func GetAll() []interfaces.ADPwnModule {
-	return append(GlobalRegistry.attackModules, GlobalRegistry.enumerationModules...)
-}
-
-func GetAllEnumerations() []interfaces.ADPwnModule {
-	return GlobalRegistry.enumerationModules
-}
-
-func GetAllAttacks() []interfaces.ADPwnModule {
-	return GlobalRegistry.attackModules
+func handoverToService(module *adpwn.Module, inherits []*adpwn.ModuleInheritanceEdge) {
+	moduleService, err := service.NewADPwnModuleService()
+	if err != nil {
+		err = fmt.Errorf("failed to create project service: %v", err)
+	}
+	_, err = moduleService.CreateWithObject(context.Background(), module)
+	if err != nil {
+		fmt.Println("failed to register plugin in db: " + err.Error())
+	}
+	err = moduleService.CreateModuleInheritanceEdges(context.Background(), inherits)
+	if err != nil {
+		fmt.Println("failed to register inheritance reference in db: " + err.Error())
+	}
 }

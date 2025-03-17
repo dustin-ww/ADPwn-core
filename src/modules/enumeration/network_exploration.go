@@ -4,46 +4,22 @@ import (
 	"ADPwn/adapter/serializable/nmap"
 	"ADPwn/adapter/tools"
 	"ADPwn/core/model"
-	"ADPwn/core/plugin" // Import plugin statt registry
+	"ADPwn/core/plugin"
 	"ADPwn/core/service"
 	"fmt"
 )
 
 type NetworkExplorer struct {
-	Name            string
-	Description     string
-	Version         string
-	Author          string
-	ExecutionMetric string
-	Dependencies    []string
-	Modes           []string
-	projectService  *service.ProjectService
-	nmapAdapter     *adapter.NmapAdapter
+	ConfigKey string
+	Modes     []string
+	// Services
+	projectService *service.ProjectService
+	// Adapter
+	nmapAdapter *adapter.NmapAdapter
 }
 
-func (n *NetworkExplorer) GetExecutionMetric() string {
-	return n.ExecutionMetric
-}
-
-func (n *NetworkExplorer) DependsOn() int {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (n *NetworkExplorer) GetName() string {
-	return n.Name
-}
-
-func (n *NetworkExplorer) GetDescription() string {
-	return n.Description
-}
-
-func (n *NetworkExplorer) GetVersion() string {
-	return n.Version
-}
-
-func (n *NetworkExplorer) GetAuthor() string {
-	return n.Author
+func (n *NetworkExplorer) GetConfigKey() string {
+	return n.ConfigKey
 }
 
 func (n *NetworkExplorer) Execute(project model.Project, options []string) error {
@@ -155,11 +131,7 @@ func (n *NetworkExplorer) isDomainController(ports nmap.Ports) bool {
 // INIT
 func init() {
 	module := &NetworkExplorer{
-		Name:            "Network Exploration",
-		Description:     "Network Exploration",
-		Version:         "0.1",
-		Author:          "dw-sec",
-		ExecutionMetric: "1h",
+		ConfigKey: "NetworkExplorer",
 	}
-	plugin.RegisterEnumeration(module)
+	plugin.RegisterPlugin(module)
 }

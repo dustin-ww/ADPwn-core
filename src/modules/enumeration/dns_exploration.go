@@ -6,12 +6,13 @@ import (
 )
 
 type DNSExplorer struct {
-	Name         string
-	Description  string
-	Version      string
-	Author       string
 	Dependencies []string
 	Modes        []string
+	ConfigKey    string
+}
+
+func (n *DNSExplorer) GetConfigKey() string {
+	return n.ConfigKey
 }
 
 func (n *DNSExplorer) DependsOn() int {
@@ -19,20 +20,8 @@ func (n *DNSExplorer) DependsOn() int {
 	panic("implement me")
 }
 
-func (n *DNSExplorer) GetName() string {
-	return n.Name
-}
-
-func (n *DNSExplorer) GetDescription() string {
-	return n.Description
-}
-
-func (n *DNSExplorer) GetVersion() string {
-	return n.Version
-}
-
-func (n *DNSExplorer) GetAuthor() string {
-	return n.Author
+func (n *DNSExplorer) GetDependencies() []string {
+	return n.Dependencies
 }
 
 func (n *DNSExplorer) Execute(project model.Project, options []string) error {
@@ -42,12 +31,9 @@ func (n *DNSExplorer) Execute(project model.Project, options []string) error {
 
 // INIT
 func init() {
-	module := &NetworkExplorer{
-		Name:        "DNS Exploration",
-		Description: "DNS Exploration",
-		Version:     "0.1",
-		Author:      "dw-sec",
+	module := &DNSExplorer{
+		ConfigKey: "DNSExplorer",
 	}
+	plugin.RegisterPlugin(module)
 
-	plugin.RegisterEnumeration(module)
 }

@@ -2,33 +2,49 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"sync"
+	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
 	pgOnce sync.Once
-	pgDB   *sql.DB
+	pgDB   *gorm.DB
 	pgErr  error
 )
 
-func GetPostgresDB() (*sql.DB, error) {
+type ctxKey string
+
+const txKey ctxKey = "dbTx"
+
+func GetPostgresDB() (*gorm.DB, error) {
 	pgOnce.Do(func() {
-		connString := "postgres://myuser:mypassword@localhost:5432/mydatabase?sslmode=disable"
+		// Connection String
+		dsn := "host=localhost user=adpwn password=adpwn dbname=adpwn port=5432 sslmode=disable"
 
-		db, err := sql.Open("pgx", connString)
+		config := &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent),
+		}
+
+		db, err := gorm.Open(postgres.Open(dsn), config)
 		if err != nil {
-			pgErr = fmt.Errorf("postgres connection failed: %w", err)
+			pgErr = fmt.Errorf("gorm connection failed: %w", err)
 			return
 		}
 
-		// Test
-		if err := db.PingContext(context.Background()); err != nil {
-			pgErr = fmt.Errorf("postgres ping failed: %w", err)
-			db.Close()
+		sqlDB, err := db.DB()
+		if err != nil {
+			pgErr = fmt.Errorf("connection pool setup failed: %w", err)
 			return
 		}
+
+		sqlDB.SetMaxIdleConns(10)
+		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Hour)
 
 		pgDB = db
 	})
@@ -36,49 +52,38 @@ func GetPostgresDB() (*sql.DB, error) {
 	return pgDB, pgErr
 }
 
-func ExecutePostgresInTransaction(ctx context.Context, db *sql.DB, op func(tx *sql.Tx) error) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("transaction start failed: %w", err)
-	}
-	defer func(tx *sql.Tx) {
-		err := tx.Rollback()
-		if err != nil {
-
-		}
-	}(tx)
-
-	if err := op(tx); err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("transaction commit failed: %w", err)
-	}
-	return nil
+func ExecutePostgresInTransaction(ctx context.Context, db *gorm.DB, op func(tx *gorm.DB) error) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Transaction in Context speichern
+		ctx = context.WithValue(ctx, txKey, tx)
+		return op(tx.WithContext(ctx))
+	})
 }
 
-func ExecutePostgresRead[T any](ctx context.Context, db *sql.DB, op func(tx *sql.Tx) (T, error)) (T, error) {
-	var zero T
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
-	if err != nil {
-		return zero, fmt.Errorf("read transaction start failed: %w", err)
-	}
-	defer func(tx *sql.Tx) {
-		err := tx.Rollback()
+func ExecutePostgresRead[T any](ctx context.Context, db *gorm.DB, op func(tx *gorm.DB) (T, error)) (T, error) {
+	var result T
+
+	// ReadOnly Transaction
+	tx := db.Session(&gorm.Session{
+		Context:     ctx,
+		PrepareStmt: false,
+	})
+
+	err := tx.Transaction(func(tx *gorm.DB) error {
+		tmp, err := op(tx)
 		if err != nil {
-
+			return err
 		}
-	}(tx)
+		result = tmp
+		return nil
+	})
 
-	result, err := op(tx)
-	if err != nil {
-		return zero, err
+	return result, err
+}
+
+func GetTxFromContext(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(txKey).(*gorm.DB); ok {
+		return tx
 	}
-
-	if err := tx.Commit(); err != nil {
-		return zero, fmt.Errorf("read transaction commit failed: %w", err)
-	}
-
-	return result, nil
+	return pgDB.WithContext(ctx)
 }

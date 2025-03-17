@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ADPwn/core/internal/utils"
+	db "ADPwn/core/internal/db"
 	db_context "context"
 	"github.com/dgraph-io/dgo/v210/protos/api"
 	"golang.org/x/net/context"
@@ -11,7 +11,7 @@ import (
 )
 
 func InitializeDB() {
-	db, err := utils.GetDB()
+	db, err := db.GetDB()
 	ctx, cancel := db_context.WithTimeout(db_context.Background(), 5*time.Second)
 
 	defer cancel()
@@ -20,7 +20,7 @@ func InitializeDB() {
 	if err != nil {
 		log.Fatalf("Failed to read schema file: %v", err)
 	}
-	log.Println("Schema file read successfully.")
+	log.Println("Dgraph: Schema file read successfully.")
 
 	op := &api.Operation{
 		Schema: string(schema),
@@ -29,7 +29,7 @@ func InitializeDB() {
 	err = db.Alter(context.Background(), op)
 
 	if err != nil {
-		log.Fatalf("Failed to read schema file: %v", err)
+		log.Fatalf("Dgraph: Failed to read schema file: %v", err)
 	}
 
 	txn := db.NewTxn()
@@ -39,4 +39,6 @@ func InitializeDB() {
 
 func main() {
 	InitializeDB()
+	DropAllPostgresObjects()
+	InitializePostgresDB()
 }

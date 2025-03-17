@@ -31,5 +31,7 @@ func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnmModuleService *servic
 	projectGroup := router.Group("/adpmod")
 	{
 		projectGroup.GET("/", handler.GetModules)
+		projectGroup.GET("/graph", handler.GetModuleInheritanceGraph)
+
 	}
 }
