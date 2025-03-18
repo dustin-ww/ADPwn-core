@@ -20,9 +20,18 @@ type ADPwnModuleRepository interface {
 	CheckIfEdgeExits(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (bool, error)
 	AddInheritanceEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error)
 	GetAllInheritanceEdges(ctx context.Context, tx *gorm.DB) ([]*adpwn.ModuleInheritanceEdge, error)
+	AddOption(ctx context.Context, tx *gorm.DB, moduleOption *adpwn.ModuleOption) error
 }
 
 type PostgresADPwnModuleRepository struct{}
+
+func (r *PostgresADPwnModuleRepository) AddOption(ctx context.Context, tx *gorm.DB, moduleOption *adpwn.ModuleOption) error {
+	result := tx.WithContext(ctx).Table("adpwn_modules_options").Create(&moduleOption)
+	if result.Error != nil {
+		return fmt.Errorf("create failed: %w", result.Error)
+	}
+	return nil
+}
 
 func (r *PostgresADPwnModuleRepository) AddInheritanceEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error) {
 	inheritanceEdge := &adpwn.ModuleInheritanceEdge{PreviousModule: previousModuleKey, NextModule: nextModuleKey}

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"ADPwn/core/interfaces"
 	"ADPwn/core/model/adpwn"
 	"fmt"
 	"github.com/spf13/viper"
@@ -24,6 +23,7 @@ const (
 	dependsOnKey       = ".depends_on"
 	lootPathKey        = ".loot_path"
 	inheritsKey        = ".inherits"
+	optionsKey         = ".options"
 )
 
 // ModuleFromConfig loads a module configuration from the specified key
@@ -41,23 +41,64 @@ func ModuleFromConfig(key string) (*adpwn.Module, []*adpwn.ModuleInheritanceEdge
 	fmt.Printf("Looking for module with key: %s\n", key)
 	fmt.Printf("Found keys: %v\n", viper.AllKeys())
 
+	var module *adpwn.Module
+	var inherits []*adpwn.ModuleInheritanceEdge
+	var prefix string
 	// Check if the enumeration module exists
-	if viper.Get("enumeration."+key) != nil {
-		prefix := enumerationPrefix + key
-		return buildEnumerationModule(prefix, key),
-			buildDependencyEdges(prefix, key),
-			nil
+
+	switch {
+	// enum module
+	case viper.Get("enumeration."+key) != nil:
+		prefix = enumerationPrefix + key
+		module = buildEnumerationModule(prefix, key)
+
+	//attack module
+	case viper.Get("attack."+key) != nil:
+		prefix = attackPrefix + key
+		module = buildAttackModule(prefix, key)
+
+	default:
+		return nil, nil, fmt.Errorf("module with key %s not found", key)
 	}
 
-	// Check if the attack module exists
-	if viper.Get("attack."+key) != nil {
-		prefix := attackPrefix + key
-		return buildAttackModule(prefix, key),
-			buildDependencyEdges(prefix, key),
-			nil
+	inherits = buildDependencyEdges(prefix, key)
+	module.Options = buildModuleOptions(prefix, key)
+	return module, inherits, nil
+}
+
+// buildModuleOptions method to build specified module options from config yml
+func buildModuleOptions(prefix, moduleKey string) []*adpwn.ModuleOption {
+	optionsPath := prefix + optionsKey
+	log.Printf("Loading module options from: %s\n", optionsPath)
+	optionsMap := viper.GetStringMap(optionsPath)
+
+	var keys []string
+	for key := range optionsMap {
+		keys = append(keys, key)
 	}
 
-	return nil, nil, fmt.Errorf("module with key %s not found", key)
+	log.Printf("Found option keys: %v", keys)
+
+	var moduleOptions []*adpwn.ModuleOption
+	for _, optionKey := range keys {
+		typeString := viper.GetString(optionsPath + "." + optionKey + ".type")
+		typeObj, err := adpwn.ParseModuleOptionType(typeString)
+		if err != nil {
+			log.Printf("Error parsing type: %s", typeString)
+			continue
+		}
+		log.Printf(typeObj.String())
+		required := viper.GetBool(optionsPath + optionKey + ".required")
+
+		moduleOption := &adpwn.ModuleOption{
+			ModuleKey: moduleKey,
+			Key:       optionKey,
+			Type:      typeObj,
+			Required:  required,
+		}
+		moduleOptions = append(moduleOptions, moduleOption)
+	}
+	return moduleOptions
 }
 
 func buildDependencyEdges(prefix, actualModuleKey string) []*adpwn.ModuleInheritanceEdge {
@@ -81,7 +122,7 @@ func buildEnumerationModule(prefix, key string) *adpwn.Module {
 		Name:            viper.GetString(prefix + nameKey),
 		Version:         viper.GetString(prefix + versionKey),
 		Author:          viper.GetString(prefix + authorKey),
-		ModuleType:      interfaces.EnumerationModule,
+		ModuleType:      adpwn.EnumerationModule,
 		LootPath:        viper.GetString(prefix + lootPathKey),
 		Key:             key,
 	}
@@ -96,7 +137,7 @@ func buildAttackModule(prefix, key string) *adpwn.Module {
 		Name:            viper.GetString(prefix + nameKey),
 		Version:         viper.GetString(prefix + versionKey),
 		Author:          viper.GetString(prefix + authorKey),
-		ModuleType:      interfaces.AttackModule,
+		ModuleType:      adpwn.AttackModule,
 		LootPath:        viper.GetString(prefix + lootPathKey),
 		Key:             key,
 	}

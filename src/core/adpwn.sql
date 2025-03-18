@@ -56,4 +56,13 @@ CREATE TABLE adpwn_collection_modules
     module_key    VARCHAR,
     collection_id INT,
     PRIMARY KEY (module_key, collection_id)
+);
+
+CREATE TABLE adpwn_modules_options
+(
+    module_key VARCHAR,
+    option_key VARCHAR,
+    type VARCHAR,
+    required bool,
+    PRIMARY KEY (module_key, option_key)
 )

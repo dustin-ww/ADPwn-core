@@ -15,10 +15,10 @@ enumeration:
           type: checkbox
           required: true
         udp:
-          type: textfield
+          type: textInput
           required: true
         additional:
-          type: textfield
+          type: textInput
 
     # DNS Explorer
     DNSExplorer:

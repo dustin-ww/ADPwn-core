@@ -1,7 +1,7 @@
 package attacks
 
 import (
-	"ADPwn/core/model"
+	"ADPwn/core/model/adpwn"
 	"ADPwn/core/plugin"
 )
 
@@ -19,7 +19,7 @@ func (n *PrinterNightmare) DependsOn() int {
 	panic("implement me")
 }
 
-func (n *PrinterNightmare) Execute(project model.Project, options []string) error {
+func (n *PrinterNightmare) Execute(parameter adpwn.Parameter) error {
 
 	return nil
 }

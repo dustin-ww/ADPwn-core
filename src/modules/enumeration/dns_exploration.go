@@ -1,7 +1,7 @@
 package enumeration
 
 import (
-	"ADPwn/core/model"
+	"ADPwn/core/model/adpwn"
 	"ADPwn/core/plugin"
 )
 
@@ -24,7 +24,7 @@ func (n *DNSExplorer) GetDependencies() []string {
 	return n.Dependencies
 }
 
-func (n *DNSExplorer) Execute(project model.Project, options []string) error {
+func (n *DNSExplorer) Execute(parameter adpwn.Parameter) error {
 
 	return nil
 }

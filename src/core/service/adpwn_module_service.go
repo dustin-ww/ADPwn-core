@@ -40,10 +40,18 @@ func (s *ADPwnModuleService) CreateWithObject(ctx context.Context, module *adpwn
 			return fmt.Errorf("module with name '%s' already exists", module.Name)
 		}
 
-		// Create the module
 		attackID, err = s.adpwnModuleRepo.CreateWithObject(ctx, tx, module)
 		if err != nil {
 			return fmt.Errorf("failed to create adpwn module: %w", err)
+		}
+
+		if len(module.Options) != 0 {
+			for _, option := range module.Options {
+				err := s.adpwnModuleRepo.AddOption(ctx, tx, option)
+				if err != nil {
+					return fmt.Errorf("error while adding option '%s'", option.Key)
+				}
+			}
 		}
 
 		return nil

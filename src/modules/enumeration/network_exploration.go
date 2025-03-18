@@ -4,6 +4,7 @@ import (
 	"ADPwn/adapter/serializable/nmap"
 	"ADPwn/adapter/tools"
 	"ADPwn/core/model"
+	"ADPwn/core/model/adpwn"
 	"ADPwn/core/plugin"
 	"ADPwn/core/service"
 	"fmt"
@@ -22,14 +23,14 @@ func (n *NetworkExplorer) GetConfigKey() string {
 	return n.ConfigKey
 }
 
-func (n *NetworkExplorer) Execute(project model.Project, options []string) error {
+func (n *NetworkExplorer) Execute(parameter adpwn.Parameter) error {
 
 	nmapAdapter := adapter.NewNmapAdapter()
 	nmapOptions := []adapter.NmapOption{
 		adapter.FullScan,
 	}
 
-	projectAddressList, err := project.TargetsAsAddressList()
+	projectAddressList, err := parameter.Project.TargetsAsAddressList()
 	if err != nil {
 		fmt.Println("Error getting target addresses")
 		return err
@@ -130,9 +131,6 @@ func (n *NetworkExplorer) isDomainController(ports nmap.Ports) bool {
 
 // INIT
 func init() {
-	options := ModuleOptions{
-		TypeSelectable
-	}
 
 	module := &NetworkExplorer{
 		ConfigKey: "NetworkExplorer",
