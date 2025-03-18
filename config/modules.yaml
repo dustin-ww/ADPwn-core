@@ -10,6 +10,16 @@ enumeration:
       execution_metric: "4h"
       inherits:
       loot_path: "/loot/nmap"
+      options:
+        fullscan:
+          type: checkbox
+          required: true
+        udp:
+          type: textfield
+          required: true
+        additional:
+          type: textfield
+
     # DNS Explorer
     DNSExplorer:
       name: "DNS Explorer ng"

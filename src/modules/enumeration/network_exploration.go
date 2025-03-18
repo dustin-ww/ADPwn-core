@@ -130,8 +130,13 @@ func (n *NetworkExplorer) isDomainController(ports nmap.Ports) bool {
 
 // INIT
 func init() {
+	options := ModuleOptions{
+		TypeSelectable
+	}
+
 	module := &NetworkExplorer{
 		ConfigKey: "NetworkExplorer",
 	}
+
 	plugin.RegisterPlugin(module)
 }

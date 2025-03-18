@@ -25,7 +25,6 @@ type ADPwnModuleRepository interface {
 type PostgresADPwnModuleRepository struct{}
 
 func (r *PostgresADPwnModuleRepository) AddInheritanceEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error) {
-	log.Println("REPO CREATE")
 	inheritanceEdge := &adpwn.ModuleInheritanceEdge{PreviousModule: previousModuleKey, NextModule: nextModuleKey}
 	result := tx.WithContext(ctx).Table("adpwn_modules_edges").Create(&inheritanceEdge)
 	if result.Error != nil {

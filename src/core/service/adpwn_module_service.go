@@ -1,4 +1,3 @@
-// ADPwn/core/service/adpwn_module_service.go
 package service
 
 import (

@@ -41,4 +41,19 @@ CREATE TABLE adpwn_users (
     user_id INT GENERATED ALWAYS AS IDENTITY,
     hash varchar,
     PRIMARY KEY (user_id)
+);
+
+CREATE TABLE adpwn_collections
+(
+    id INT GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR,
+    description VARCHAR,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE adpwn_collection_modules
+(
+    module_key    VARCHAR,
+    collection_id INT,
+    PRIMARY KEY (module_key, collection_id)
 )

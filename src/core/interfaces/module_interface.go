@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 )
 
@@ -12,10 +13,15 @@ const (
 	AttackModule
 )
 
-func (mt ModuleType) String() string {
-	return [...]string{"EnumerationModule", "AttackModule"}[mt]
+// String mit Pointer-Empfänger
+func (mt *ModuleType) String() string {
+	if mt == nil {
+		return "UnknownModule"
+	}
+	return [...]string{"EnumerationModule", "AttackModule"}[*mt]
 }
 
+// Parse-Funktion bleibt gleich
 func ParseModuleType(s string) (ModuleType, error) {
 	switch s {
 	case "AttackModule":
@@ -27,26 +33,51 @@ func ParseModuleType(s string) (ModuleType, error) {
 	}
 }
 
-func (m *ModuleType) Scan(value interface{}) error {
+// Scan weiterhin mit Pointer
+func (mt *ModuleType) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
 
 	strValue, ok := value.(string)
 	if !ok {
-		return fmt.Errorf("erwartete string für ModuleType, bekam: %T", value)
+		return fmt.Errorf("expected string for ModuleType, got: %T", value)
 	}
 
 	parsed, err := ParseModuleType(strValue)
 	if err != nil {
 		return err
 	}
-	*m = parsed
+	*mt = parsed
 	return nil
 }
 
-func (m ModuleType) Value() (driver.Value, error) {
-	return m.String(), nil
+// Value mit Pointer-Empfänger
+func (mt *ModuleType) Value() (driver.Value, error) {
+	if mt == nil {
+		return nil, nil
+	}
+	return mt.String(), nil
+}
+
+// MarshalJSON mit Pointer-Empfänger
+func (mt *ModuleType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(mt.String())
+}
+
+// UnmarshalJSON bleibt gleich
+func (mt *ModuleType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	parsed, err := ParseModuleType(s)
+	if err != nil {
+		return err
+	}
+	*mt = parsed
+	return nil
 }
 
 type ADPwnModule interface {
