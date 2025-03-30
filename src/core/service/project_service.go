@@ -39,9 +39,33 @@ func NewProjectService() (*ProjectService, error) {
 }
 
 // AddDomainWithHosts adds a domain with associated hosts to a project.
-func (s *ProjectService) AddDomainWithHosts(ctx context.Context, projectUID, domainName string, hosts []string) error {
+//func (s *ProjectService) AddDomainWithHosts(ctx context.Context, projectUID, domainName string, hosts []string) error {
+//	return db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
+//		domainUID, err := s.domainRepo.Create(ctx, domainName)
+//		if err != nil {
+//			return fmt.Errorf("failed to create domain: %w", err)
+//		}
+//
+//		if err := s.projectRepo.AddDomain(ctx, tx, projectUID, domainUID); err != nil {
+//			return fmt.Errorf("failed to link domain: %w", err)
+//		}
+//
+//		for _, ip := range hosts {
+//			hostUID, err := s.hostRepo.Create(ctx, ip)
+//			if err != nil {
+//				return fmt.Errorf("failed to create host %s: %w", ip, err)
+//			}
+//			if err := s.domainRepo.AddHost(ctx, domainUID, hostUID); err != nil {
+//				return fmt.Errorf("failed to link host: %w", err)
+//			}
+//		}
+//		return nil
+//	})
+//}
+
+func (s *ProjectService) AddDomain(ctx context.Context, projectUID string, domain *model.Domain) error {
 	return db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
-		domainUID, err := s.domainRepo.Create(ctx, domainName)
+		domainUID, err := s.domainRepo.CreateWithObject(ctx, tx, domain)
 		if err != nil {
 			return fmt.Errorf("failed to create domain: %w", err)
 		}
@@ -50,16 +74,24 @@ func (s *ProjectService) AddDomainWithHosts(ctx context.Context, projectUID, dom
 			return fmt.Errorf("failed to link domain: %w", err)
 		}
 
-		for _, ip := range hosts {
-			hostUID, err := s.hostRepo.Create(ctx, ip)
-			if err != nil {
-				return fmt.Errorf("failed to create host %s: %w", ip, err)
-			}
-			if err := s.domainRepo.AddHost(ctx, domainUID, hostUID); err != nil {
-				return fmt.Errorf("failed to link host: %w", err)
-			}
-		}
+		//if len(domain.HasHost) > 0 {
+		//	for _, host := range domain.HasHost {
+		//		hostUID, err := s.hostRepo.Create(ctx, tx, host.Name)
+		//		if err != nil {
+		//			return fmt.Errorf("failed to create host %s: %w", host.Name, err)
+		//		}
+		//		if err := s.domainRepo.AddHost(ctx, tx, domainUID, hostUID); err != nil {
+		//			return fmt.Errorf("failed to link host: %w", err)
+		//		}
+		//	}
+		//}
 		return nil
+	})
+}
+
+func (s *ProjectService) GetProjectDomains(ctx context.Context, projectUID string) ([]*model.Domain, error) {
+	return db.ExecuteRead(ctx, s.db, func(tx *dgo.Txn) ([]*model.Domain, error) {
+		return s.domainRepo.GetByProjectUID(ctx, tx, projectUID)
 	})
 }
 

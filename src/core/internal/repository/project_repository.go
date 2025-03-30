@@ -74,21 +74,6 @@ func (r *DgraphProjectRepository) Get(ctx context.Context, tx *dgo.Txn, uid stri
                 description
                 has_domain {
                     uid
-                    name
-                    has_host {
-                        uid
-                        ip
-                        has_service {
-                            uid
-                            name
-                            port
-                        }
-                    }
-                    has_user {
-                        uid
-                        username
-                        is_admin
-                    }
                 }
                 has_target {
                     uid
@@ -165,6 +150,41 @@ func (r *DgraphProjectRepository) GetTargets(ctx context.Context, tx *dgo.Txn, u
 	return targets, nil
 }
 
+/*func (r *DgraphProjectRepository) GetDomains(ctx context.Context, tx *dgo.Txn, uid string) ([]*model.Domain, error) {
+	query := `
+        query ProjectDomains($uid: string) {
+            project(func: uid($uid)) @filter(eq(dgraph.type, "Project")) {
+                has_domain{
+                    uid
+                    name
+                }
+            }
+        }
+    `
+
+	vars := map[string]string{"$uid": uid}
+	res, err := tx.QueryWithVars(ctx, query, vars)
+	if err != nil {
+		return nil, fmt.Errorf("query error: %w", err)
+	}
+
+	var result struct {
+		Project []struct {
+			HasDomain []*model.Domain `json:"has_domain"`
+		} `json:"project"`
+	}
+
+	if err := json.Unmarshal(res.Json, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %w", err)
+	}
+
+	if len(result.Project) == 0 {
+		return nil, fmt.Errorf("project not found: %s", uid)
+	}
+
+	return result.Project[0].HasDomain, nil
+}
+*/
 // GetAll retrieves all projects with full details
 func (r *DgraphProjectRepository) GetAll(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error) {
 	query := `
@@ -174,21 +194,6 @@ func (r *DgraphProjectRepository) GetAll(ctx context.Context, tx *dgo.Txn) ([]*m
                 name
                 has_domain {
                     uid
-                    name
-                    has_host {
-                        uid
-                        ip
-                        has_service {
-                            uid
-                            name
-                            port
-                        }
-                    }
-                    has_user {
-                        uid
-                        username
-                        is_admin
-                    }
                 }
                 has_target {
                     uid

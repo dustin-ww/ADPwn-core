@@ -26,6 +26,28 @@
 <has_dependency>: [uid] .
 <is_assumed_by>: [uid] @reverse .
 
+<dns_name>: string @index(exact) .
+<net_bios_name>: string @index(exact) .
+<domain_guid>: string @index(exact) .
+<domain_sid>: string .
+<domain_function_level>: string .
+<forest_function_level>: string .
+<fsmo_role_owners>: [string] .
+<security_policies>: uid .
+<trust_relationships>: [uid] .
+<created>: datetime .
+<last_modified>: datetime .
+<linked_gpos>: [string] .
+<default_containers>: [string] .
+<min_pwd_length>: int .
+<pwd_history_length>: int .
+<lockout_threshold>: int .
+<lockout_duration>: int .
+<trusted_domain>: string @index(exact) .
+<direction>: string .
+<trust_type>: string .
+<is_transitive>: bool .
+
 
 type Project {
   name
@@ -59,9 +81,37 @@ type Target {
 
 type Domain {
   name
+  dns_name
+  net_bios_name
+  domain_guid
+  domain_sid
+  domain_function_level
+  forest_function_level
+  fsmo_role_owners
+  security_policies
+  trust_relationships
+  created
+  last_modified
+  linked_gpos
+  default_containers
   belongs_to_project
   has_host
   has_user
+  dgraph.type
+}
+type SecurityPolicy {
+  min_pwd_length
+  pwd_history_length
+  lockout_threshold
+  lockout_duration
+  dgraph.type
+}
+
+type Trust {
+  trusted_domain
+  direction
+  trust_type
+  is_transitive
   dgraph.type
 }
 

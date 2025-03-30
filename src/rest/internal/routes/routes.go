@@ -7,29 +7,39 @@ import (
 )
 
 func RegisterProjectHandlers(router *gin.Engine, projectService *service.ProjectService) {
-	handler := handlers.NewProjectHandler(projectService)
+	projectHandler := handlers.NewProjectHandler(projectService)
 
 	projectGroup := router.Group("/projects")
 	{
-		projectGroup.GET("/overviews", handler.GetProjectOverviews)
-		projectGroup.GET("/all", handler.GetProjectOverviews)
-		projectGroup.GET("/:UID", handler.Get)
-		projectGroup.PATCH("/:UID", handler.UpdateProject)
-		projectGroup.POST("/", handler.CreateProject)
-		projectGroup.POST("/:UID/domains", handler.AddDomainWithHosts)
-		projectGroup.POST("/:UID/hk", handler.AddDomainWithHosts)
-		projectGroup.GET("/:UID/targets", handler.GetTargets)
-		projectGroup.POST("/:UID/targets", handler.CreateTarget)
+		projectGroup.GET("/overviews", projectHandler.GetProjectOverviews)
+		projectGroup.GET("/", projectHandler.GetProjectOverviews)
+		projectGroup.POST("/", projectHandler.CreateProject)
+
+		projectItemGroup := projectGroup.Group("/:projectUID")
+		{
+			projectItemGroup.GET("", projectHandler.Get)
+			projectItemGroup.PATCH("", projectHandler.UpdateProject)
+
+			domainsGroup := projectItemGroup.Group("/domains")
+			{
+				domainsGroup.GET("", projectHandler.GetDomains)
+				domainsGroup.POST("", projectHandler.AddDomain)
+			}
+			targetsGroup := projectItemGroup.Group("/targets")
+			{
+				targetsGroup.GET("", projectHandler.GetTargets)
+				targetsGroup.POST("", projectHandler.CreateTarget)
+			}
+		}
 	}
 }
 
-func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnmModuleService *service.ADPwnModuleService) {
-	handler := handlers.NewADPwnModuleHandler(adpwnmModuleService)
+func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnModuleService *service.ADPwnModuleService) {
+	moduleHandler := handlers.NewADPwnModuleHandler(adpwnModuleService)
 
-	projectGroup := router.Group("/adpmod")
+	moduleGroup := router.Group("/adpwn")
 	{
-		projectGroup.GET("/", handler.GetModules)
-		projectGroup.GET("/graph", handler.GetModuleInheritanceGraph)
-
+		moduleGroup.GET("/", moduleHandler.GetModules)
+		moduleGroup.GET("/graph", moduleHandler.GetModuleInheritanceGraph)
 	}
 }

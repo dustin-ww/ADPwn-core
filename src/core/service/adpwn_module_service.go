@@ -106,6 +106,6 @@ func (s *ADPwnModuleService) GetInheritanceGraph(ctx context.Context) (*adpwn.In
 	})
 }
 
-func (*ADPwnModuleService) Run(uid string) error {
+func (*ADPwnModuleService) Run(key string) error {
 	panic("Implement me")
 }

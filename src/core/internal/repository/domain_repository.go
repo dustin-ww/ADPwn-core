@@ -12,13 +12,13 @@ import (
 type DomainRepository interface {
 	//CRUD
 	Create(ctx context.Context, name string) (string, error) // Returns UID
-	Get(ctx context.Context, uid string) (*model.Domain, error)
+	Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Domain, error)
 	UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error
 	CreateWithObject(ctx context.Context, tx *dgo.Txn, model *model.Domain) (string, error)
 	//Relations
-	LinkToProject(ctx context.Context, domainUID, projectUID string) error
 	AddHost(ctx context.Context, domainUID, hostUID string) error
 	AddUser(ctx context.Context, domainUID, userUID string) error
+	GetByProjectUID(ctx context.Context, tx *dgo.Txn, projectUID string) ([]*model.Domain, error)
 }
 
 type DgraphDomainRepository struct {
@@ -81,6 +81,74 @@ func (r *DgraphDomainRepository) Get(ctx context.Context, tx *dgo.Txn, uid strin
 	return &result.Domain[0], nil
 }
 
+func (r *DgraphDomainRepository) GetByProjectUID(ctx context.Context, tx *dgo.Txn, projectUID string) ([]*model.Domain, error) {
+	query := `
+        query DomainsByProject($projectUID: string) {
+            domains(func: has(belongs_to_project)) @filter(uid_in(belongs_to_project, $projectUID)) {
+                uid
+                dns_name
+                net_bios_name
+                domain_guid
+                domain_sid
+                domain_function_level
+                forest_function_level
+                fsmo_role_owners
+                created
+                last_modified
+                linked_gpos
+                default_containers
+                dgraph.type
+                
+                security_policies {
+                    min_pwd_length
+                    pwd_history_length
+                    lockout_threshold
+                    lockout_duration
+                }
+                
+                trust_relationships {
+                    trusted_domain
+                    direction
+                    trust_type
+                    is_transitive
+                }
+
+                belongs_to_project {
+                    uid
+                }
+
+                has_host {
+                    uid
+                    
+                }
+                
+                has_user {
+                    uid
+                }
+            }
+        }
+    `
+
+	vars := map[string]string{"$projectUID": projectUID}
+	res, err := tx.QueryWithVars(ctx, query, vars)
+	if err != nil {
+		return nil, fmt.Errorf("query error: %w", err)
+	}
+
+	var result struct {
+		Domains []*model.Domain `json:"domains"`
+	}
+	if err := json.Unmarshal(res.Json, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %w", err)
+	}
+
+	//for _, domain := range result.Domains {
+	//	// domain.Created = formatTime(domain.RawCreated)
+	//}
+
+	return result.Domains, nil
+}
+
 func (r *DgraphDomainRepository) Create(ctx context.Context, name string) (string, error) {
 	//TODO implement me
 	panic("implement me")
@@ -103,15 +171,4 @@ func (r *DgraphDomainRepository) AddUser(ctx context.Context, domainUID, userUID
 
 func NewDgraphDomainRepository(db *dgo.Dgraph) *DgraphDomainRepository {
 	return &DgraphDomainRepository{DB: db}
-}
-
-func (r *DgraphDomainRepository) LinkToProject(ctx context.Context, domainUID, projectUID string) error {
-	mu := &api.Mutation{
-		SetNquads: []byte(fmt.Sprintf(
-			`<%s> <has_domain> <%s> .`, // Project → Domain
-			projectUID, domainUID,
-		)),
-	}
-	_, err := r.DB.NewTxn().Mutate(ctx, mu)
-	return err
 }

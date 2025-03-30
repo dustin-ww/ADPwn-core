@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"ADPwn/core/model"
 	"ADPwn/core/service"
 	"ADPwn/rest/internal/util"
 	"fmt"
@@ -61,7 +62,7 @@ func (h *ProjectHandler) AddDomainWithHosts(c *gin.Context) {
 }
 
 func (h *ProjectHandler) GetTargets(c *gin.Context) {
-	uid := c.Param("UID")
+	uid := c.Param("projectUID")
 	if uid == "" {
 		fmt.Print("BAD REQUEST")
 		fmt.Println(uid)
@@ -111,7 +112,7 @@ func (h *ProjectHandler) CreateTarget(c *gin.Context) {
 		return
 	}
 
-	uid := c.Param("UID")
+	uid := c.Param("projectUID")
 	fmt.Println("UID:", uid)
 
 	target, err := h.projectService.CreateTarget(
@@ -167,7 +168,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 }
 
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
-	uid := c.Param("UID")
+	uid := c.Param("projectUID")
 	var fields map[string]interface{}
 
 	if err := c.BindJSON(&fields); err != nil {
@@ -182,4 +183,73 @@ func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"status": "success"})
+}
+
+func (h *ProjectHandler) AddDomain(c *gin.Context) {
+	type AddDomainRequest struct {
+		Name string `json:"name" binding:"required" validate:"required"`
+	}
+
+	var request AddDomainRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	uid := c.Param("projectUID")
+
+	domain := &model.Domain{
+		Name: request.Name,
+	}
+
+	err := h.projectService.AddDomain(
+		c.Request.Context(),
+		uid,
+		domain,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to add domain",
+			"details": err.Error(),
+		})
+		fmt.Println(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "Domain successfully added",
+		"name":   request.Name,
+	})
+}
+
+func (h *ProjectHandler) GetDomains(c *gin.Context) {
+	uid := c.Param("projectUID")
+	if uid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Project UID is required",
+		})
+		return
+	}
+
+	log.Println(uid)
+	domains, err := h.projectService.GetProjectDomains(
+		c.Request.Context(),
+		uid,
+	)
+
+	if err != nil {
+		errReturn := gin.H{
+			"error":   "Failed to retrieve domains",
+			"details": err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, errReturn)
+	}
+
+	log.Println(domains)
+
+	c.JSON(http.StatusOK, domains)
 }
