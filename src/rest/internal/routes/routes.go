@@ -9,7 +9,6 @@ import (
 func RegisterProjectHandlers(router *gin.Engine, projectService *service.ProjectService) {
 	handler := handlers.NewProjectHandler(projectService)
 
-	// Definiere die Routen
 	projectGroup := router.Group("/projects")
 	{
 		projectGroup.GET("/overviews", handler.GetProjectOverviews)
@@ -27,7 +26,6 @@ func RegisterProjectHandlers(router *gin.Engine, projectService *service.Project
 func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnmModuleService *service.ADPwnModuleService) {
 	handler := handlers.NewADPwnModuleHandler(adpwnmModuleService)
 
-	// Definiere die Routen
 	projectGroup := router.Group("/adpmod")
 	{
 		projectGroup.GET("/", handler.GetModules)

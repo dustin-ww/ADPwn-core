@@ -52,7 +52,7 @@ func (h *ProjectHandler) Get(c *gin.Context) {
 		})
 		return
 	}
-
+	log.Println(*project)
 	c.JSON(http.StatusOK, project)
 }
 
