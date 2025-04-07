@@ -1,0 +1,11 @@
+{
+  "tools": [
+    "nmap",
+    "nmap-scripts",
+    "netcat-openbsd",
+    "curl",
+    "iptables",
+    "tcpdump",
+    "bind-tools"
+  ]
+}
