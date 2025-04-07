@@ -31,7 +31,7 @@ func (h *ProjectHandler) GetProjectOverviews(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Get(c *gin.Context) {
-	uid := c.Param("UID")
+	uid := c.Param("projectUID")
 	if uid == "" {
 		fmt.Print("BAD REQUEST")
 		fmt.Println(uid)
@@ -99,7 +99,8 @@ func (h *ProjectHandler) GetTargets(c *gin.Context) {
 func (h *ProjectHandler) CreateTarget(c *gin.Context) {
 	type CreateTargetRequest struct {
 		IP   string `json:"ip" binding:"required" validate:"required"`
-		Name string `json:"name"`
+		Note string `json:"note"`
+		CIDR int    `json:"cidr"`
 	}
 
 	var request CreateTargetRequest
@@ -108,18 +109,18 @@ func (h *ProjectHandler) CreateTarget(c *gin.Context) {
 			"error":   "Invalid request data",
 			"details": err.Error(),
 		})
-		fmt.Println("")
 		return
 	}
 
 	uid := c.Param("projectUID")
 	fmt.Println("UID:", uid)
 
-	target, err := h.projectService.CreateTarget(
+	target, err := h.projectService.CreateTargets(
 		c.Request.Context(),
 		uid,
 		request.IP,
-		request.Name,
+		request.Note,
+		request.CIDR,
 	)
 
 	if err != nil {
@@ -246,6 +247,7 @@ func (h *ProjectHandler) GetDomains(c *gin.Context) {
 			"error":   "Failed to retrieve domains",
 			"details": err.Error(),
 		}
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, errReturn)
 	}
 

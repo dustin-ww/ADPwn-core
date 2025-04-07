@@ -16,7 +16,7 @@ type ADPwnModuleRepository interface {
 	Get(ctx context.Context, tx *gorm.DB, attack_id string) (*adpwn.Module, error)
 	CheckIfExistsByKey(ctx context.Context, tx *gorm.DB, key string) (bool, error)
 
-	// Inheritance Edges
+	// Inheritance Edgesgo r
 	CheckIfEdgeExits(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (bool, error)
 	AddInheritanceEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error)
 	GetAllInheritanceEdges(ctx context.Context, tx *gorm.DB) ([]*adpwn.ModuleInheritanceEdge, error)

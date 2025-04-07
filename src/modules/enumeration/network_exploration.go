@@ -7,7 +7,6 @@ import (
 	"ADPwn/core/model/adpwn"
 	"ADPwn/core/plugin"
 	"ADPwn/core/service"
-	"fmt"
 )
 
 type NetworkExplorer struct {
@@ -24,22 +23,6 @@ func (n *NetworkExplorer) GetConfigKey() string {
 }
 
 func (n *NetworkExplorer) Execute(parameter adpwn.Parameter) error {
-
-	nmapAdapter := adapter.NewNmapAdapter()
-	nmapOptions := []adapter.NmapOption{
-		adapter.FullScan,
-	}
-
-	projectAddressList, err := parameter.Project.TargetsAsAddressList()
-	if err != nil {
-		fmt.Println("Error getting target addresses")
-		return err
-	}
-	_, err = nmapAdapter.RunCommand(projectAddressList, nmapOptions)
-
-	if err != nil {
-		fmt.Println("Error running command")
-	}
 
 	return nil
 }

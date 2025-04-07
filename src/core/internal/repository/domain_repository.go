@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
+	"log"
 )
 
 type DomainRepository interface {
 	//CRUD
-	Create(ctx context.Context, name string) (string, error) // Returns UID
+	Create(ctx context.Context, tx *dgo.Txn, name string) (string, error) // Returns UID
 	Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Domain, error)
 	UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error
 	CreateWithObject(ctx context.Context, tx *dgo.Txn, model *model.Domain) (string, error)
@@ -19,6 +20,7 @@ type DomainRepository interface {
 	AddHost(ctx context.Context, domainUID, hostUID string) error
 	AddUser(ctx context.Context, domainUID, userUID string) error
 	GetByProjectUID(ctx context.Context, tx *dgo.Txn, projectUID string) ([]*model.Domain, error)
+	AddToProject(ctx context.Context, tx *dgo.Txn, domainUID string, projectUID string) error
 }
 
 type DgraphDomainRepository struct {
@@ -27,6 +29,9 @@ type DgraphDomainRepository struct {
 
 func (r *DgraphDomainRepository) CreateWithObject(ctx context.Context, tx *dgo.Txn, domain *model.Domain) (string, error) {
 	domain.DType = []string{"Domain"}
+	domain.UID = "_:blank-0"
+
+	log.Println(domain.Name)
 
 	jsonData, err := json.Marshal(domain)
 	if err != nil {
@@ -43,6 +48,34 @@ func (r *DgraphDomainRepository) CreateWithObject(ctx context.Context, tx *dgo.T
 	}
 
 	return assigned.Uids["blank-0"], nil
+}
+
+func (r *DgraphDomainRepository) AddToProject(
+	ctx context.Context,
+	tx *dgo.Txn,
+	domainUID string,
+	projectUID string,
+) error {
+	update := map[string]interface{}{
+		"uid":                domainUID,
+		"belongs_to_project": map[string]string{"uid": projectUID},
+	}
+
+	jsonData, err := json.Marshal(update)
+	if err != nil {
+		return fmt.Errorf("json marshal error: %w", err)
+	}
+
+	mu := &api.Mutation{
+		SetJson: jsonData,
+	}
+
+	_, err = tx.Mutate(ctx, mu)
+	if err != nil {
+		return fmt.Errorf("dgraph mutation failed: %w", err)
+	}
+
+	return nil
 }
 
 func (r *DgraphDomainRepository) Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Domain, error) {
@@ -84,8 +117,9 @@ func (r *DgraphDomainRepository) Get(ctx context.Context, tx *dgo.Txn, uid strin
 func (r *DgraphDomainRepository) GetByProjectUID(ctx context.Context, tx *dgo.Txn, projectUID string) ([]*model.Domain, error) {
 	query := `
         query DomainsByProject($projectUID: string) {
-            domains(func: has(belongs_to_project)) @filter(uid_in(belongs_to_project, $projectUID)) {
+           domains(func: has(belongs_to_project)) @filter(uid_in(belongs_to_project, $projectUID)) {
                 uid
+				name
                 dns_name
                 net_bios_name
                 domain_guid
@@ -98,33 +132,6 @@ func (r *DgraphDomainRepository) GetByProjectUID(ctx context.Context, tx *dgo.Tx
                 linked_gpos
                 default_containers
                 dgraph.type
-                
-                security_policies {
-                    min_pwd_length
-                    pwd_history_length
-                    lockout_threshold
-                    lockout_duration
-                }
-                
-                trust_relationships {
-                    trusted_domain
-                    direction
-                    trust_type
-                    is_transitive
-                }
-
-                belongs_to_project {
-                    uid
-                }
-
-                has_host {
-                    uid
-                    
-                }
-                
-                has_user {
-                    uid
-                }
             }
         }
     `
@@ -138,18 +145,21 @@ func (r *DgraphDomainRepository) GetByProjectUID(ctx context.Context, tx *dgo.Tx
 	var result struct {
 		Domains []*model.Domain `json:"domains"`
 	}
+
 	if err := json.Unmarshal(res.Json, &result); err != nil {
 		return nil, fmt.Errorf("unmarshal error: %w", err)
 	}
 
-	//for _, domain := range result.Domains {
-	//	// domain.Created = formatTime(domain.RawCreated)
-	//}
+	log.Printf(
+		"Found %d domains for project %s\n",
+		len(result.Domains),
+		projectUID)
 
+	//sslog.Println(result.Domains[0].Name)
 	return result.Domains, nil
 }
 
-func (r *DgraphDomainRepository) Create(ctx context.Context, name string) (string, error) {
+func (r *DgraphDomainRepository) Create(ctx context.Context, tx *dgo.Txn, name string) (string, error) {
 	//TODO implement me
 	panic("implement me")
 }

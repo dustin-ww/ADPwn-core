@@ -1,32 +1,37 @@
 package utils
 
 import (
-	"fmt"
-	"log"
 	"net"
+	"strconv"
 )
 
-func GenerateIPs(subnet string) ([]string, error) {
-	ip, ipNet, err := net.ParseCIDR(subnet)
+func IpsFromIPAndCIDR(ipStr string, cidr int) ([]string, error) {
+	cidrStr := ipStr + "/" + strconv.Itoa(cidr)
+	ip, ipnet, err := net.ParseCIDR(cidrStr)
 	if err != nil {
-		return nil, fmt.Errorf("ungültiges Subnetz: %v", err)
+		return nil, err
 	}
 
 	var ips []string
-	for ip := ip.Mask(ipNet.Mask); ipNet.Contains(ip); incrementIP(ip) {
-		if !isPrivateIP(ip.String()) {
-			log.Fatal("This tool is only valid for private ip adres")
-		}
-
-		ips = append(ips, ip.String())
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
+		ipCopy := make(net.IP, len(ip))
+		copy(ipCopy, ip)
+		ips = append(ips, ipCopy.String())
 	}
 
-	// remove broadcast adress
 	if len(ips) > 0 {
 		ips = ips[:len(ips)-1]
 	}
-
 	return ips, nil
+}
+
+func inc(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] != 0 {
+			break
+		}
+	}
 }
 
 func incrementIP(ip net.IP) {

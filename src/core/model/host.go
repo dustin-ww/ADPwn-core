@@ -1,14 +1,31 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type Host struct {
+	// Internal
 	UID                string    `json:"uid,omitempty"`
 	IP                 string    `json:"ip,omitempty"`
 	IsDomainController bool      `json:"is_domain_controller,omitempty"`
 	BelongsToDomain    Domain    `json:"belongs_to_domain,omitempty"`
 	HasService         []Service `json:"has_service,omitempty"`
 	DType              []string  `json:"dgraph.type,omitempty"`
+	InternalCreatedAt  time.Time `json:"internal_created_at,omitempty"`
+	// AD related
+	DistinguishedName      string    `json:"distinguishedName"`
+	ObjectGUID             string    `json:"objectGUID"`
+	ObjectSid              string    `json:"objectSid"`
+	SAMAccountName         string    `json:"sAMAccountName"`
+	DNSHostName            string    `json:"dNSHostName"`
+	OperatingSystem        string    `json:"operatingSystem"`
+	OperatingSystemVersion string    `json:"operatingSystemVersion"`
+	LastLogonTimestamp     time.Time `json:"lastLogonTimestamp"`
+	WhenCreated            time.Time `json:"whenCreated"`
+	WhenChanged            time.Time `json:"whenChanged"`
+	UserAccountControl     int       `json:"userAccountControl"`
 }
 
 type HostBuilder struct {

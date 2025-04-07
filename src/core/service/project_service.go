@@ -2,13 +2,14 @@ package service
 
 import (
 	"ADPwn/core/internal/db"
+	"ADPwn/core/internal/repository"
 	"ADPwn/core/internal/utils"
 	"ADPwn/core/model"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
-
-	"ADPwn/core/internal/repository"
+	"github.com/dgraph-io/dgo/v210/protos/api"
 
 	"github.com/dgraph-io/dgo/v210"
 )
@@ -74,6 +75,10 @@ func (s *ProjectService) AddDomain(ctx context.Context, projectUID string, domai
 			return fmt.Errorf("failed to link domain: %w", err)
 		}
 
+		if err := s.domainRepo.AddToProject(ctx, tx, domainUID, projectUID); err != nil {
+			return fmt.Errorf("failed to reverse link domain to project: %w", err)
+		}
+
 		//if len(domain.HasHost) > 0 {
 		//	for _, host := range domain.HasHost {
 		//		hostUID, err := s.hostRepo.Create(ctx, tx, host.Name)
@@ -96,22 +101,82 @@ func (s *ProjectService) GetProjectDomains(ctx context.Context, projectUID strin
 }
 
 // CreateTarget creates a new target and links it to a project.
-func (s *ProjectService) CreateTarget(ctx context.Context, projectUID, targetIP, name string) (string, error) {
-	var targetUID string
-	err := db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
-		var err error
-		targetUID, err = s.targetRepo.Create(ctx, tx, targetIP, name)
-		if err != nil {
-			return fmt.Errorf("target creation failed: %w", err)
-		}
-		log.Println("Target created:", targetUID)
+func (s *ProjectService) CreateTargets(ctx context.Context, projectUID, ip, note string, cidr int) ([]string, error) {
+	ips, err := utils.IpsFromIPAndCIDR(ip, cidr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ips: %w", err)
+	}
 
-		if err := s.projectRepo.AddTarget(ctx, tx, projectUID, targetUID); err != nil {
-			return fmt.Errorf("linking failed: %w", err)
+	// Batch-Größe definieren (z.B. 1000 IPs pro Batch)
+	batchSize := 1000
+	allTargetUIDs := make([]string, 0, len(ips))
+
+	err = db.ExecuteInTransaction(ctx, s.db, func(tx *dgo.Txn) error {
+		for i := 0; i < len(ips); i += batchSize {
+			end := i + batchSize
+			if end > len(ips) {
+				end = len(ips)
+			}
+			batch := ips[i:end]
+
+			// 1. Massen-Mutation für Targets
+			targetUIDs, err := s.createTargetsBatch(ctx, tx, batch, note)
+			if err != nil {
+				return err
+			}
+			allTargetUIDs = append(allTargetUIDs, targetUIDs...)
+
+			// 2. Massen-Verknüpfung mit Projekt
+			if err := s.linkTargetsToProject(ctx, tx, projectUID, targetUIDs); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
-	return targetUID, err
+
+	return allTargetUIDs, err
+}
+
+// Hilfsfunktion für Batch-Erstellung
+func (s *ProjectService) createTargetsBatch(ctx context.Context, tx *dgo.Txn, ips []string, note string) ([]string, error) {
+	targets := make([]interface{}, len(ips))
+	for i, ip := range ips {
+		targets[i] = map[string]interface{}{
+			"uid":         fmt.Sprintf("_:target%d", i), // Unique Blank Node
+			"ip":          ip,
+			"note":        note,
+			"dgraph.type": "Target",
+		}
+	}
+
+	targetJSON, _ := json.Marshal(targets)
+	mu := &api.Mutation{SetJson: targetJSON}
+	assigned, err := tx.Mutate(ctx, mu)
+	if err != nil {
+		return nil, fmt.Errorf("batch mutation failed: %w", err)
+	}
+
+	// Sammle UIDs in Reihenfolge
+	uids := make([]string, len(ips))
+	for i := 0; i < len(ips); i++ {
+		uidKey := fmt.Sprintf("target%d", i)
+		uids[i] = assigned.Uids[uidKey]
+	}
+	return uids, nil
+}
+
+// Hilfsfunktion für Batch-Verknüpfung
+func (s *ProjectService) linkTargetsToProject(ctx context.Context, tx *dgo.Txn, projectUID string, targetUIDs []string) error {
+	nquads := bytes.Buffer{}
+	for _, uid := range targetUIDs {
+		nquads.WriteString(fmt.Sprintf("<%s> <has_target> <%s> .\n", projectUID, uid))
+	}
+
+	mu := &api.Mutation{
+		SetNquads: nquads.Bytes(),
+	}
+	_, err := tx.Mutate(ctx, mu)
+	return err
 }
 
 // Create creates a new project.
