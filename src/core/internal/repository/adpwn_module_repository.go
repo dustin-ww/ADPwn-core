@@ -21,7 +21,7 @@ type ADPwnModuleRepository interface {
 	//CRUD
 	GetAll(ctx context.Context, tx *gorm.DB) ([]*adpwn.Module, error)
 	CreateWithObject(ctx context.Context, tx *gorm.DB, module *adpwn.Module) (string, error)
-	Get(ctx context.Context, tx *gorm.DB, attack_id string) (*adpwn.Module, error)
+	Get(ctx context.Context, tx *gorm.DB, attackId string) (*adpwn.Module, error)
 	CheckIfExistsByKey(ctx context.Context, tx *gorm.DB, key string) (bool, error)
 
 	// module dependencies
@@ -157,7 +157,7 @@ func (r *PostgresADPwnModuleRepository) CreateWithObject(ctx context.Context, tx
 	return module.AttackID, nil
 }
 
-func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, attack_id string) (*adpwn.Module, error) {
+func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, attackId string) (*adpwn.Module, error) {
 	{
 		var module adpwn.Module
 
@@ -165,12 +165,12 @@ func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, at
 
 		err := tx.
 			Preload("Dependencies").
-			First(&module, "uid = ?", attack_id).
+			First(&module, "uid = ?", attackId).
 			Error
 
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, fmt.Errorf("module not found: %s", attack_id)
+				return nil, fmt.Errorf("module not found: %s", attackId)
 			}
 			return nil, fmt.Errorf("database error: %w", err)
 		}

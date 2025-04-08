@@ -16,11 +16,14 @@ type DomainRepository interface {
 	Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Domain, error)
 	UpdateFields(ctx context.Context, uid string, fields map[string]interface{}) error
 	CreateWithObject(ctx context.Context, tx *dgo.Txn, model *model.Domain) (string, error)
+
 	//Relations
 	AddHost(ctx context.Context, domainUID, hostUID string) error
 	AddUser(ctx context.Context, domainUID, userUID string) error
-	GetByProjectUID(ctx context.Context, tx *dgo.Txn, projectUID string) ([]*model.Domain, error)
 	AddToProject(ctx context.Context, tx *dgo.Txn, domainUID string, projectUID string) error
+
+	// Reverse Relations
+	GetByProjectUID(ctx context.Context, tx *dgo.Txn, projectUID string) ([]*model.Domain, error)
 }
 
 type DgraphDomainRepository struct {

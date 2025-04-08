@@ -196,7 +196,7 @@ func (s *ProjectService) Create(ctx context.Context, name string) (string, error
 // GetOverviewForAll retrieves overview information for all projects.
 func (s *ProjectService) GetOverviewForAll(ctx context.Context) ([]*model.Project, error) {
 	return db.ExecuteRead(ctx, s.db, func(tx *dgo.Txn) ([]*model.Project, error) {
-		return s.projectRepo.GetAllOverview(ctx, tx)
+		return s.projectRepo.GetAll(ctx, tx)
 	})
 }
 

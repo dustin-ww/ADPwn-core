@@ -13,17 +13,16 @@ import (
 
 // ProjectRepository defines operations for project data access
 type ProjectRepository interface {
-	// CRUD operations
+	// CRUD
 	Create(ctx context.Context, tx *dgo.Txn, name string) (string, error)
 	Get(ctx context.Context, tx *dgo.Txn, uid string) (*model.Project, error)
 	GetAll(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error)
-	GetAllOverview(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error)
+	// TODO: Move into target repo
 	GetTargets(ctx context.Context, tx *dgo.Txn, uid string) ([]*model.Target, error)
-	UpdateName(ctx context.Context, tx *dgo.Txn, uid, newName string) error
 	Delete(ctx context.Context, tx *dgo.Txn, uid string) error
 	UpdateFields(ctx context.Context, tx *dgo.Txn, uid string, fields map[string]interface{}) error
 
-	// Relation operations
+	// Relations
 	AddDomain(ctx context.Context, tx *dgo.Txn, projectUID, domainUID string) error
 	AddTarget(ctx context.Context, tx *dgo.Txn, projectUID, targetUID string) error
 }
@@ -150,41 +149,6 @@ func (r *DgraphProjectRepository) GetTargets(ctx context.Context, tx *dgo.Txn, u
 	return targets, nil
 }
 
-/*func (r *DgraphProjectRepository) GetDomains(ctx context.Context, tx *dgo.Txn, uid string) ([]*model.Domain, error) {
-	query := `
-        query ProjectDomains($uid: string) {
-            project(func: uid($uid)) @filter(eq(dgraph.type, "Project")) {
-                has_domain{
-                    uid
-                    name
-                }
-            }
-        }
-    `
-
-	vars := map[string]string{"$uid": uid}
-	res, err := tx.QueryWithVars(ctx, query, vars)
-	if err != nil {
-		return nil, fmt.Errorf("query error: %w", err)
-	}
-
-	var result struct {
-		Project []struct {
-			HasDomain []*model.Domain `json:"has_domain"`
-		} `json:"project"`
-	}
-
-	if err := json.Unmarshal(res.Json, &result); err != nil {
-		return nil, fmt.Errorf("unmarshal error: %w", err)
-	}
-
-	if len(result.Project) == 0 {
-		return nil, fmt.Errorf("project not found: %s", uid)
-	}
-
-	return result.Project[0].HasDomain, nil
-}
-*/
 // GetAll retrieves all projects with full details
 func (r *DgraphProjectRepository) GetAll(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error) {
 	query := `
@@ -192,6 +156,11 @@ func (r *DgraphProjectRepository) GetAll(ctx context.Context, tx *dgo.Txn) ([]*m
             allProjects(func: type(Project)) {
                 uid
                 name
+				type
+                description
+                modified_at
+                created_at
+                tags
                 has_domain {
                     uid
                 }
@@ -199,38 +168,6 @@ func (r *DgraphProjectRepository) GetAll(ctx context.Context, tx *dgo.Txn) ([]*m
                     uid
                     ip_range
                 }
-            }
-        }
-    `
-
-	resp, err := tx.Query(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("query error: %w", err)
-	}
-
-	var response struct {
-		Projects []*model.Project `json:"allProjects"`
-	}
-
-	if err := json.Unmarshal(resp.Json, &response); err != nil {
-		return nil, fmt.Errorf("unmarshal error: %w", err)
-	}
-
-	return response.Projects, nil
-}
-
-// GetAllOverview retrieves all projects with basic information
-func (r *DgraphProjectRepository) GetAllOverview(ctx context.Context, tx *dgo.Txn) ([]*model.Project, error) {
-	query := `
-        {
-            allProjects(func: type(Project)) {
-                uid
-                name
-                type
-                description
-                modified_at
-                created_at
-                tags
             }
         }
     `
@@ -281,30 +218,6 @@ func (r *DgraphProjectRepository) Delete(ctx context.Context, tx *dgo.Txn, uid s
 	}
 
 	_, err := tx.Mutate(ctx, mutation)
-	if err != nil {
-		return fmt.Errorf("mutation error: %w", err)
-	}
-
-	return nil
-}
-
-// UpdateName updates a project's name
-func (r *DgraphProjectRepository) UpdateName(ctx context.Context, tx *dgo.Txn, uid, newName string) error {
-	update := map[string]interface{}{
-		"uid":  uid,
-		"name": newName,
-	}
-
-	updateJSON, err := json.Marshal(update)
-	if err != nil {
-		return fmt.Errorf("marshal error: %w", err)
-	}
-
-	mu := &api.Mutation{
-		SetJson: updateJSON,
-	}
-
-	_, err = tx.Mutate(ctx, mu)
 	if err != nil {
 		return fmt.Errorf("mutation error: %w", err)
 	}
