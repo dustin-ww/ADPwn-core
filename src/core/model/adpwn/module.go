@@ -12,8 +12,3 @@ type Module struct {
 	Key             string          `gorm:"column:key" json:"key"`
 	Options         []*ModuleOption `gorm:"-" json:"options"`
 }
-
-type ModuleInheritanceEdge struct {
-	PreviousModule string `gorm:"column:previous_module" json:"previous_module"`
-	NextModule     string `gorm:"column:next_module" json:"next_module"`
-}

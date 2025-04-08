@@ -38,7 +38,7 @@ func InitializeDB() {
 }
 
 func main() {
-	InitializeDB()
-	//DropAllPostgresObjects()
-	//InitializePostgresDB()
+	//InitializeDB()
+	DropAllPostgresObjects()
+	InitializePostgresDB()
 }

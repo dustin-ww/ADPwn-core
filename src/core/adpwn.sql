@@ -13,7 +13,7 @@ CREATE TABLE adpwn_modules (
                                UNIQUE(key)
 );
 
-CREATE TABLE adpwn_modules_edges (
+CREATE TABLE adpwn_modules_dependencies (
                                      previous_module VARCHAR(100) NOT NULL,
                                      next_module VARCHAR(100) NOT NULL,
                                      PRIMARY KEY (previous_module, next_module),
@@ -62,6 +62,7 @@ CREATE TABLE adpwn_modules_options
 (
     module_key VARCHAR,
     option_key VARCHAR,
+    label VARCHAR,
     type VARCHAR,
     required bool,
     PRIMARY KEY (module_key, option_key)

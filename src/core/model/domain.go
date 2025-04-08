@@ -13,7 +13,7 @@ type Domain struct {
 	HasHost          []utils.UIDRef `json:"has_host,omitempty"`
 	HasUser          []utils.UIDRef `json:"has_user,omitempty"`
 	DType            []string       `json:"dgraph.type,omitempty"`
-	// AD related
+	// AD related ..
 	DNSName             string         `json:"dns_name,omitempty"`
 	NetBiosName         string         `json:"net_bios_name,omitempty"`
 	DomainGUID          string         `json:"domain_guid,omitempty"`

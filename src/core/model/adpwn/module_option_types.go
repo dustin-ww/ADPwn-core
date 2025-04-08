@@ -2,6 +2,7 @@ package adpwn
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -37,12 +38,10 @@ func ParseModuleOptionType(moduleOptionStr string) (ModuleOptionType, error) {
 	return 0, errors.New("invalid module option type: " + moduleOptionStr)
 }
 
-// Value implementiert die driver.Valuer-Schnittstelle, sodass der Enum als String in die DB geschrieben werden kann.
 func (mt ModuleOptionType) Value() (driver.Value, error) {
 	return mt.String(), nil
 }
 
-// Scan implementiert die sql.Scanner-Schnittstelle, sodass der DB-Wert korrekt in den Enum umgewandelt wird.
 func (mt *ModuleOptionType) Scan(value interface{}) error {
 	if value == nil {
 		return nil
@@ -55,6 +54,25 @@ func (mt *ModuleOptionType) Scan(value interface{}) error {
 	if err != nil {
 		return err
 	}
+	*mt = option
+	return nil
+}
+
+func (mt ModuleOptionType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(mt.String())
+}
+
+func (mt *ModuleOptionType) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	option, err := ParseModuleOptionType(s)
+	if err != nil {
+		return err
+	}
+
 	*mt = option
 	return nil
 }

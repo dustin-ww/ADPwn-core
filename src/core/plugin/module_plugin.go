@@ -30,7 +30,7 @@ func GetAll() []*adpwn.Module {
 	return GlobalRegistry.modules
 }
 
-func handoverToService(module *adpwn.Module, inherits []*adpwn.ModuleInheritanceEdge) {
+func handoverToService(module *adpwn.Module, inherits []*adpwn.ModuleDependency) {
 	moduleService, err := service.NewADPwnModuleService()
 	if err != nil {
 		err = fmt.Errorf("failed to create project service: %v", err)

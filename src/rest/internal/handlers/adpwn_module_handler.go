@@ -41,3 +41,7 @@ func (h *ADPwnModuleHandler) GetModuleInheritanceGraph(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, graph)
 }
+
+func (h *ADPwnModuleHandler) RunModule(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{})
+}

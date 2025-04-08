@@ -60,11 +60,11 @@ func (s *ADPwnModuleService) CreateWithObject(ctx context.Context, module *adpwn
 	return attackID, err
 }
 
-func (s *ADPwnModuleService) CreateModuleInheritanceEdges(ctx context.Context, inheritanceEdges []*adpwn.ModuleInheritanceEdge) error {
+func (s *ADPwnModuleService) CreateModuleInheritanceEdges(ctx context.Context, inheritanceEdges []*adpwn.ModuleDependency) error {
 	return db.ExecutePostgresInTransaction(ctx, s.db, func(tx *gorm.DB) error {
 		log.Printf("CREATE INHERITANCE")
 		for _, inheritanceEdge := range inheritanceEdges {
-			exists, err := s.adpwnModuleRepo.CheckIfEdgeExits(ctx, tx, inheritanceEdge.PreviousModule, inheritanceEdge.NextModule)
+			exists, err := s.adpwnModuleRepo.CheckIfDependencyExits(ctx, tx, inheritanceEdge.PreviousModule, inheritanceEdge.NextModule)
 			if err != nil {
 				return fmt.Errorf("failed to check if inheritance edge exists: %w", err)
 			}
@@ -74,7 +74,7 @@ func (s *ADPwnModuleService) CreateModuleInheritanceEdges(ctx context.Context, i
 				continue
 			}
 
-			_, err = s.adpwnModuleRepo.AddInheritanceEdge(ctx, tx, inheritanceEdge.PreviousModule, inheritanceEdge.NextModule)
+			_, err = s.adpwnModuleRepo.AddDependency(ctx, tx, inheritanceEdge.PreviousModule, inheritanceEdge.NextModule)
 			if err != nil {
 				return fmt.Errorf("failed to add inheritance edge: %w", err)
 			}
@@ -85,7 +85,25 @@ func (s *ADPwnModuleService) CreateModuleInheritanceEdges(ctx context.Context, i
 }
 
 func (s *ADPwnModuleService) GetAll(ctx context.Context) ([]*adpwn.Module, error) {
-	return s.adpwnModuleRepo.GetAll(ctx, s.db)
+	return db.ExecutePostgresRead(ctx, s.db, func(db *gorm.DB) ([]*adpwn.Module, error) {
+		modules, err := s.adpwnModuleRepo.GetAll(ctx, db)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, module := range modules {
+			module.Options, err = s.adpwnModuleRepo.GetOptionsByModuleKey(ctx, db, module.Key)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get module options: %w", err)
+			}
+		}
+
+		return modules, nil
+	})
+}
+
+func (s *ADPwnModuleService) GetOrderedAttackVectorModules(ctx context.Context, module *adpwn.Module) ([]*adpwn.Module, error) {
+
 }
 
 func (s *ADPwnModuleService) GetInheritanceGraph(ctx context.Context) (*adpwn.InheritanceGraph, error) {
@@ -97,7 +115,7 @@ func (s *ADPwnModuleService) GetInheritanceGraph(ctx context.Context) (*adpwn.In
 			return nil, fmt.Errorf("error while fetching all adpwn modules %s", err)
 		}
 		inheritanceGraph.Nodes = modules
-		edges, err := s.adpwnModuleRepo.GetAllInheritanceEdges(ctx, db)
+		edges, err := s.adpwnModuleRepo.GetAllDependencies(ctx, db)
 		if err != nil {
 			return nil, fmt.Errorf("error while fetching all adpwn inheritance edges %s", err)
 		}

@@ -9,59 +9,103 @@ import (
 	"log"
 )
 
+const (
+	TableModules            = "adpwn_modules"
+	TableModuleDependencies = "adpwn_modules_dependencies"
+	TableModuleOptions      = "adpwn_modules_options"
+)
+
+// ADPwnModuleRepository This is a repository for implementing Postgres-specific persistence of adpwn modules.
 type ADPwnModuleRepository interface {
+
 	//CRUD
 	GetAll(ctx context.Context, tx *gorm.DB) ([]*adpwn.Module, error)
 	CreateWithObject(ctx context.Context, tx *gorm.DB, module *adpwn.Module) (string, error)
 	Get(ctx context.Context, tx *gorm.DB, attack_id string) (*adpwn.Module, error)
 	CheckIfExistsByKey(ctx context.Context, tx *gorm.DB, key string) (bool, error)
 
-	// Inheritance Edgesgo r
-	CheckIfEdgeExits(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (bool, error)
-	AddInheritanceEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error)
-	GetAllInheritanceEdges(ctx context.Context, tx *gorm.DB) ([]*adpwn.ModuleInheritanceEdge, error)
+	// module dependencies
+	CheckIfDependencyExits(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (bool, error)
+	AddDependency(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error)
+	GetAllDependencies(ctx context.Context, tx *gorm.DB) ([]*adpwn.ModuleDependency, error)
+	GetOrderedDependencies(ctx context.Context, tx *gorm.DB, moduleKey string) ([]string, error)
+
+	// module options
 	AddOption(ctx context.Context, tx *gorm.DB, moduleOption *adpwn.ModuleOption) error
+	GetOptions(ctx context.Context, tx *gorm.DB, moduleKey string) ([]*adpwn.ModuleOption, error)
 }
 
 type PostgresADPwnModuleRepository struct{}
 
+func (r *PostgresADPwnModuleRepository) GetOrderedDependencies(ctx context.Context, tx *gorm.DB, moduleKey string) ([]string, error) {
+	// SQL statement for recursive Common Table Expression (CTE)
+	// This mimics the WITH RECURSIVE functionality from PostgreSQL
+	// See: https://www.dylanpaulus.com/posts/postgres-is-a-graph-database/
+	query := `
+        WITH RECURSIVE dependency_modules AS (
+            -- Base case: get direct dependencies of the starting module
+            SELECT next_module
+            FROM adpwn_modules_dependencies
+            WHERE previous_module = ?
+            
+            UNION
+            
+            -- Recursive case: get dependencies of dependencies
+            SELECT e.next_module
+            FROM adpwn_modules_dependencies e
+            JOIN dependency_modules dm ON e.previous_module = dm.next_module
+        )
+        SELECT m.*
+        FROM adpwn_modules m
+        JOIN dependency_modules dm ON m.key = dm.next_module
+    `
+
+	var moduleKeys []string
+
+	if err := tx.WithContext(ctx).Raw(query, moduleKey).Scan(&moduleKeys).Error; err != nil {
+		return nil, fmt.Errorf("failed to get dependency key list: %w", err)
+	}
+
+	return moduleKeys, nil
+}
+
 func (r *PostgresADPwnModuleRepository) AddOption(ctx context.Context, tx *gorm.DB, moduleOption *adpwn.ModuleOption) error {
-	result := tx.WithContext(ctx).Table("adpwn_modules_options").Create(&moduleOption)
+	result := tx.WithContext(ctx).Table(TableModuleOptions).Create(&moduleOption)
 	if result.Error != nil {
 		return fmt.Errorf("create failed: %w", result.Error)
 	}
 	return nil
 }
 
-func (r *PostgresADPwnModuleRepository) AddInheritanceEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error) {
-	inheritanceEdge := &adpwn.ModuleInheritanceEdge{PreviousModule: previousModuleKey, NextModule: nextModuleKey}
-	result := tx.WithContext(ctx).Table("adpwn_modules_edges").Create(&inheritanceEdge)
+func (r *PostgresADPwnModuleRepository) AddDependency(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (string, error) {
+	dependency := &adpwn.ModuleDependency{PreviousModule: previousModuleKey, NextModule: nextModuleKey}
+	result := tx.WithContext(ctx).Table(TableModuleDependencies).Create(&dependency)
 	if result.Error != nil {
 		return "", fmt.Errorf("create failed: %w", result.Error)
 	}
 	//TODO: Change
-	return inheritanceEdge.PreviousModule, nil
+	return dependency.PreviousModule, nil
 }
 
-func (r *PostgresADPwnModuleRepository) GetAllInheritanceEdges(ctx context.Context, tx *gorm.DB) ([]*adpwn.ModuleInheritanceEdge, error) {
-	var inheritanceEdges []*adpwn.ModuleInheritanceEdge
+func (r *PostgresADPwnModuleRepository) GetAllDependencies(ctx context.Context, tx *gorm.DB) ([]*adpwn.ModuleDependency, error) {
+	var dependencies []*adpwn.ModuleDependency
 
-	err := tx.WithContext(ctx).Table("adpwn_modules_edges").Find(&inheritanceEdges).Error
+	err := tx.WithContext(ctx).Table(TableModuleDependencies).Find(&dependencies).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all edges: %w", err)
 	}
 
-	if len(inheritanceEdges) == 0 {
+	if len(dependencies) == 0 {
 		log.Println("no edges found in database")
 	}
-	return inheritanceEdges, nil
+	return dependencies, nil
 }
 
 func (r *PostgresADPwnModuleRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]*adpwn.Module, error) {
 	var modules []*adpwn.Module
 
-	err := tx.WithContext(ctx).Table("adpwn_modules").Find(&modules).Error
+	err := tx.WithContext(ctx).Table(TableModules).Find(&modules).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all modules: %w", err)
@@ -77,14 +121,10 @@ func NewPostgresADPwnModuleRepository() *PostgresADPwnModuleRepository {
 	return &PostgresADPwnModuleRepository{}
 }
 
-func (r *PostgresADPwnModuleRepository) AddDependencyEdge(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) error {
-	panic("implement me")
-}
-
-func (r *PostgresADPwnModuleRepository) CheckIfEdgeExits(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (bool, error) {
+func (r *PostgresADPwnModuleRepository) CheckIfDependencyExits(ctx context.Context, tx *gorm.DB, previousModuleKey, nextModuleKey string) (bool, error) {
 	query := tx.WithContext(ctx)
 	var count int64
-	err := query.Table("adpwn_modules_edges").
+	err := query.Table(TableModuleDependencies).
 		Where("previous_module = ?", previousModuleKey).
 		Where("next_module = ?", nextModuleKey).
 		Count(&count).
@@ -98,7 +138,7 @@ func (r *PostgresADPwnModuleRepository) CheckIfEdgeExits(ctx context.Context, tx
 func (r *PostgresADPwnModuleRepository) CheckIfExistsByKey(ctx context.Context, tx *gorm.DB, key string) (bool, error) {
 	query := tx.WithContext(ctx)
 	var count int64
-	err := query.Table("adpwn_modules").
+	err := query.Table(TableModules).
 		Where("key = ?", key).
 		Count(&count).
 		Error
@@ -109,7 +149,7 @@ func (r *PostgresADPwnModuleRepository) CheckIfExistsByKey(ctx context.Context, 
 }
 
 func (r *PostgresADPwnModuleRepository) CreateWithObject(ctx context.Context, tx *gorm.DB, module *adpwn.Module) (string, error) {
-	result := tx.WithContext(ctx).Table("adpwn_modules").Create(&module)
+	result := tx.WithContext(ctx).Table(TableModules).Create(&module)
 	if result.Error != nil {
 		return "", fmt.Errorf("create failed: %w", result.Error)
 	}
@@ -124,8 +164,8 @@ func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, at
 		tx := tx.WithContext(ctx)
 
 		err := tx.
-			Preload("Dependencies").              // Eager Loading von Abhängigkeiten
-			First(&module, "uid = ?", attack_id). // UID ist kein Primärschlüssel
+			Preload("Dependencies").
+			First(&module, "uid = ?", attack_id).
 			Error
 
 		if err != nil {
@@ -136,4 +176,27 @@ func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, at
 		}
 		return &module, nil
 	}
+}
+
+func (r *PostgresADPwnModuleRepository) GetOptions(ctx context.Context, tx *gorm.DB, moduleKey string) ([]*adpwn.ModuleOption, error) {
+	if moduleKey == "" {
+		return nil, errors.New("moduleKey cannot be empty")
+	}
+
+	var options []*adpwn.ModuleOption
+
+	result := tx.WithContext(ctx).
+		Table(TableModuleOptions).
+		Where("module_key = ?", moduleKey).
+		Find(&options)
+
+	if err := result.Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch module options: %w", err)
+	}
+
+	if options == nil {
+		options = []*adpwn.ModuleOption{}
+	}
+
+	return options, nil
 }

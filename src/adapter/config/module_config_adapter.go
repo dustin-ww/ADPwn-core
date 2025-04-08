@@ -27,7 +27,7 @@ const (
 )
 
 // ModuleFromConfig loads a module configuration from the specified key
-func ModuleFromConfig(key string) (*adpwn.Module, []*adpwn.ModuleInheritanceEdge, error) {
+func ModuleFromConfig(key string) (*adpwn.Module, []*adpwn.ModuleDependency, error) {
 	viper.SetConfigName(moduleConfigName)
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(moduleConfigPath)
@@ -42,7 +42,7 @@ func ModuleFromConfig(key string) (*adpwn.Module, []*adpwn.ModuleInheritanceEdge
 	fmt.Printf("Found keys: %v\n", viper.AllKeys())
 
 	var module *adpwn.Module
-	var inherits []*adpwn.ModuleInheritanceEdge
+	var inherits []*adpwn.ModuleDependency
 	var prefix string
 	// Check if the enumeration module exists
 
@@ -101,14 +101,14 @@ func buildModuleOptions(prefix, moduleKey string) []*adpwn.ModuleOption {
 	return moduleOptions
 }
 
-func buildDependencyEdges(prefix, actualModuleKey string) []*adpwn.ModuleInheritanceEdge {
+func buildDependencyEdges(prefix, actualModuleKey string) []*adpwn.ModuleDependency {
 	log.Println("Building dependency edges " + prefix + inheritsKey)
 	inheritModuleKeys := viper.GetStringSlice(prefix + inheritsKey)
 	log.Printf("Inherit module keys: %v\n", inheritModuleKeys)
-	var dependencyEdges []*adpwn.ModuleInheritanceEdge
+	var dependencyEdges []*adpwn.ModuleDependency
 	for _, previousModuleKey := range inheritModuleKeys {
 		log.Printf("Building dependency edge with key: %s\n", previousModuleKey)
-		dependencyEdges = append(dependencyEdges, &adpwn.ModuleInheritanceEdge{PreviousModule: previousModuleKey, NextModule: actualModuleKey})
+		dependencyEdges = append(dependencyEdges, &adpwn.ModuleDependency{PreviousModule: previousModuleKey, NextModule: actualModuleKey})
 	}
 	return dependencyEdges
 }
