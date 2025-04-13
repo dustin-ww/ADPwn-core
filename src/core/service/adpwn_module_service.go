@@ -162,3 +162,24 @@ func (s *ADPwnModuleService) RunAttackVector(ctx context.Context, key string) er
 		return nil
 	})
 }
+
+func (s *ADPwnModuleService) GetOptionsForAttackVector(ctx context.Context, moduleKey string) ([]*adpwn.ModuleOption, error) {
+	modules, err := s.GetAttackVectorByKey(ctx, moduleKey)
+	if err != nil {
+		return nil, err
+	}
+
+	seenKeys := make(map[string]struct{})
+	uniqueOptions := make([]*adpwn.ModuleOption, 0)
+
+	for _, module := range modules {
+		for _, option := range module.Options {
+			key := option.Key
+			if _, exists := seenKeys[key]; !exists {
+				seenKeys[key] = struct{}{}
+				uniqueOptions = append(uniqueOptions, option)
+			}
+		}
+	}
+	return uniqueOptions, nil
+}

@@ -57,3 +57,14 @@ func (h *ADPwnModuleHandler) RunAttackVector(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{})
 }
+
+func (h *ADPwnModuleHandler) GetAttackVectorOptions(c *gin.Context) {
+	moduleKey := c.Param("moduleKey")
+	options, err := h.adpwnModuleService.GetOptionsForAttackVector(c.Request.Context(), moduleKey)
+	if err != nil {
+		log.Printf("failed to get options for attack vector: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, options)
+}
