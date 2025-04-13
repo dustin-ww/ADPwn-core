@@ -9,7 +9,7 @@ import (
 func RegisterProjectHandlers(router *gin.Engine, projectService *service.ProjectService) {
 	projectHandler := handlers.NewProjectHandler(projectService)
 
-	projectGroup := router.Group("/projects")
+	projectGroup := router.Group("/project")
 	{
 		projectGroup.GET("/overviews", projectHandler.GetProjectOverviews)
 		projectGroup.GET("/", projectHandler.GetProjectOverviews)
@@ -37,10 +37,25 @@ func RegisterProjectHandlers(router *gin.Engine, projectService *service.Project
 func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnModuleService *service.ADPwnModuleService) {
 	moduleHandler := handlers.NewADPwnModuleHandler(adpwnModuleService)
 
-	moduleGroup := router.Group("/adpwn")
+	adpwnGroup := router.Group("/adpwn")
 	{
-		moduleGroup.GET("/", moduleHandler.GetModules)
-		moduleGroup.GET("/graph", moduleHandler.GetModuleInheritanceGraph)
-		moduleGroup.GET("/run", moduleHandler.RunModule)
+		moduleGroup := adpwnGroup.Group("/modules")
+		{
+			moduleGroup.GET("/", moduleHandler.GetModules)
+			moduleGroup.GET("/graph", moduleHandler.GetModuleInheritanceGraph)
+
+			moduleItemGroup := moduleGroup.Group("/:moduleKey")
+			{
+				moduleItemRunGroup := moduleItemGroup.Group("/run")
+				{
+					moduleItemRunGroup.GET("/single", moduleHandler.RunModule)
+					moduleItemRunGroup.GET("/vector", moduleHandler.RunAttackVector)
+
+				}
+				moduleItemGroup.GET("/lastrun", moduleHandler.RunModule)
+			}
+
+		}
+
 	}
 }

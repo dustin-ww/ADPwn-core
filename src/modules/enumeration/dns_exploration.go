@@ -3,6 +3,7 @@ package enumeration
 import (
 	"ADPwn/core/model/adpwn"
 	"ADPwn/core/plugin"
+	"ADPwn/sse/sse"
 )
 
 type DNSExplorer struct {
@@ -24,8 +25,7 @@ func (n *DNSExplorer) GetDependencies() []string {
 	return n.Dependencies
 }
 
-func (n *DNSExplorer) Execute(parameter adpwn.Parameter) error {
-
+func (n *DNSExplorer) ExecuteModule(params *adpwn.Parameter, logger *sse.SSELogger) error {
 	return nil
 }
 

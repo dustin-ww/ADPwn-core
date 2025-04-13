@@ -137,7 +137,6 @@ func (s *ProjectService) CreateTargets(ctx context.Context, projectUID, ip, note
 	return allTargetUIDs, err
 }
 
-// Hilfsfunktion für Batch-Erstellung
 func (s *ProjectService) createTargetsBatch(ctx context.Context, tx *dgo.Txn, ips []string, note string) ([]string, error) {
 	targets := make([]interface{}, len(ips))
 	for i, ip := range ips {
@@ -156,7 +155,6 @@ func (s *ProjectService) createTargetsBatch(ctx context.Context, tx *dgo.Txn, ip
 		return nil, fmt.Errorf("batch mutation failed: %w", err)
 	}
 
-	// Sammle UIDs in Reihenfolge
 	uids := make([]string, len(ips))
 	for i := 0; i < len(ips); i++ {
 		uidKey := fmt.Sprintf("target%d", i)
@@ -165,7 +163,6 @@ func (s *ProjectService) createTargetsBatch(ctx context.Context, tx *dgo.Txn, ip
 	return uids, nil
 }
 
-// Hilfsfunktion für Batch-Verknüpfung
 func (s *ProjectService) linkTargetsToProject(ctx context.Context, tx *dgo.Txn, projectUID string, targetUIDs []string) error {
 	nquads := bytes.Buffer{}
 	for _, uid := range targetUIDs {

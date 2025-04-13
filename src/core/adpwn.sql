@@ -30,6 +30,15 @@ CREATE TABLE adpwn_modules_metadata (
         REFERENCES adpwn_modules(module_id)
 );
 
+CREATE TABLE adpwn_modules_lastrun (
+    project_uid VARCHAR(255),
+    module_key VARCHAR(255),
+    run_id INT,
+    last_parameter JSONB,
+    timestamp TIMESTAMP
+);
+
+
 CREATE TABLE adpwn_logs (
     project_uid VARCHAR(255),
     module_id INT,
@@ -63,6 +72,7 @@ CREATE TABLE adpwn_modules_options
     module_key VARCHAR,
     option_key VARCHAR,
     label VARCHAR,
+    placeholder VARCHAR,
     type VARCHAR,
     required bool,
     PRIMARY KEY (module_key, option_key)

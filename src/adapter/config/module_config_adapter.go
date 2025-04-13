@@ -83,6 +83,8 @@ func buildModuleOptions(prefix, moduleKey string) []*adpwn.ModuleOption {
 	for _, optionKey := range keys {
 		typeString := viper.GetString(optionsPath + "." + optionKey + ".type")
 		typeObj, err := adpwn.ParseModuleOptionType(typeString)
+		label := viper.GetString(optionsPath + "." + optionKey + ".label")
+		placeholder := viper.GetString(optionsPath + "." + optionKey + ".placeholder")
 		if err != nil {
 			log.Printf("Error parsing type: %s", typeString)
 			continue
@@ -91,10 +93,12 @@ func buildModuleOptions(prefix, moduleKey string) []*adpwn.ModuleOption {
 		required := viper.GetBool(optionsPath + optionKey + ".required")
 
 		moduleOption := &adpwn.ModuleOption{
-			ModuleKey: moduleKey,
-			Key:       optionKey,
-			Type:      typeObj,
-			Required:  required,
+			ModuleKey:   moduleKey,
+			Key:         optionKey,
+			Type:        typeObj,
+			Label:       label,
+			Required:    required,
+			Placeholder: placeholder,
 		}
 		moduleOptions = append(moduleOptions, moduleOption)
 	}

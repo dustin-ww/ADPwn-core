@@ -1,8 +1,7 @@
 package adpwn
 
-import "ADPwn/core/model"
-
 type Parameter struct {
-	Project model.Project
-	Options map[string]interface{}
+	RunID    string // RunID hinzufügen
+	Inputs   map[string]interface{}
+	Metadata map[string]string
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"ADPwn/core/interfaces"
 	"ADPwn/core/internal/db"
 	"ADPwn/core/internal/repository"
 	"ADPwn/core/model/adpwn"
@@ -13,9 +14,10 @@ import (
 type ADPwnModuleService struct {
 	db              *gorm.DB
 	adpwnModuleRepo repository.ADPwnModuleRepository
+	attackRunner    interfaces.ModuleExecutor // Add this back
 }
 
-func NewADPwnModuleService() (*ADPwnModuleService, error) {
+func NewADPwnModuleService(attackRunner interfaces.ModuleExecutor) (*ADPwnModuleService, error) {
 	db, err := db.GetPostgresDB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database connection: %w", err)
@@ -24,6 +26,7 @@ func NewADPwnModuleService() (*ADPwnModuleService, error) {
 	return &ADPwnModuleService{
 		db:              db,
 		adpwnModuleRepo: repository.NewPostgresADPwnModuleRepository(),
+		attackRunner:    attackRunner, // Store the executor
 	}, nil
 }
 
@@ -62,7 +65,6 @@ func (s *ADPwnModuleService) CreateWithObject(ctx context.Context, module *adpwn
 
 func (s *ADPwnModuleService) CreateModuleInheritanceEdges(ctx context.Context, inheritanceEdges []*adpwn.ModuleDependency) error {
 	return db.ExecutePostgresInTransaction(ctx, s.db, func(tx *gorm.DB) error {
-		log.Printf("CREATE INHERITANCE")
 		for _, inheritanceEdge := range inheritanceEdges {
 			exists, err := s.adpwnModuleRepo.CheckIfDependencyExits(ctx, tx, inheritanceEdge.PreviousModule, inheritanceEdge.NextModule)
 			if err != nil {
@@ -92,9 +94,13 @@ func (s *ADPwnModuleService) GetAll(ctx context.Context) ([]*adpwn.Module, error
 		}
 
 		for _, module := range modules {
-			module.Options, err = s.adpwnModuleRepo.GetOptionsByModuleKey(ctx, db, module.Key)
+			module.Options, err = s.adpwnModuleRepo.GetOptions(ctx, db, module.Key)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get module options: %w", err)
+			}
+			module.DependencyVector, err = s.adpwnModuleRepo.GetOrderedDependencies(ctx, db, module.Key)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get module dependency vector: %w", err)
 			}
 		}
 
@@ -102,9 +108,31 @@ func (s *ADPwnModuleService) GetAll(ctx context.Context) ([]*adpwn.Module, error
 	})
 }
 
-func (s *ADPwnModuleService) GetOrderedAttackVectorModules(ctx context.Context, module *adpwn.Module) ([]*adpwn.Module, error) {
+func (s *ADPwnModuleService) GetAttackVectorByKey(ctx context.Context, moduleKey string) ([]*adpwn.Module, error) {
+	return db.ExecutePostgresRead(ctx, s.db, func(db *gorm.DB) ([]*adpwn.Module, error) {
+		var attackVector []*adpwn.Module
 
+		module, err := s.adpwnModuleRepo.Get(ctx, db, moduleKey)
+		if err != nil {
+			return nil, fmt.Errorf("error while fetching all dependencies of adpwn modules for graph edges %s", err)
+		}
+
+		for _, dependencyKey := range module.DependencyVector {
+			dep, err := s.adpwnModuleRepo.Get(ctx, db, dependencyKey)
+			if err != nil {
+				return nil, fmt.Errorf("error while fetching all dependencies of adpwn modules for graph edges %s", err)
+			}
+			attackVector = append(attackVector, dep)
+		}
+		return append(attackVector, module), nil
+	})
 }
+
+//func (s *ADPwnModuleService) GetAttackVector(ctx context.Context, moduleKey string) ([]*adpwn.Module, error) {
+//	return db.ExecutePostgresRead(ctx, s.db, func(db *gorm.DB) (*adpwn.Module, error) {
+//		s.adpwnModuleRepo.GetOrderedDependencies()
+//	})
+//}
 
 func (s *ADPwnModuleService) GetInheritanceGraph(ctx context.Context) (*adpwn.InheritanceGraph, error) {
 	return db.ExecutePostgresRead(ctx, s.db, func(db *gorm.DB) (*adpwn.InheritanceGraph, error) {
@@ -117,13 +145,20 @@ func (s *ADPwnModuleService) GetInheritanceGraph(ctx context.Context) (*adpwn.In
 		inheritanceGraph.Nodes = modules
 		edges, err := s.adpwnModuleRepo.GetAllDependencies(ctx, db)
 		if err != nil {
-			return nil, fmt.Errorf("error while fetching all adpwn inheritance edges %s", err)
+			return nil, fmt.Errorf("error while fetching all dependencies of adpwn modules for graph edges %s", err)
 		}
 		inheritanceGraph.Edges = edges
 		return &inheritanceGraph, nil
 	})
 }
 
-func (*ADPwnModuleService) Run(key string) error {
-	panic("Implement me")
+func (s *ADPwnModuleService) RunAttackVector(ctx context.Context, key string) error {
+	return db.ExecutePostgresInTransaction(ctx, s.db, func(tx *gorm.DB) error {
+		// Use the attackRunner that was injected into the service
+		err := RunAttackVector(ctx, key, nil, s.attackRunner)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }

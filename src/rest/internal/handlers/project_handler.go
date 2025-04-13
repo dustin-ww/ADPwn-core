@@ -33,8 +33,6 @@ func (h *ProjectHandler) GetProjectOverviews(c *gin.Context) {
 func (h *ProjectHandler) Get(c *gin.Context) {
 	uid := c.Param("projectUID")
 	if uid == "" {
-		fmt.Print("BAD REQUEST")
-		fmt.Println(uid)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Project UID is required",
 		})
@@ -64,8 +62,6 @@ func (h *ProjectHandler) AddDomainWithHosts(c *gin.Context) {
 func (h *ProjectHandler) GetTargets(c *gin.Context) {
 	uid := c.Param("projectUID")
 	if uid == "" {
-		fmt.Print("BAD REQUEST")
-		fmt.Println(uid)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Project UID is required",
 		})

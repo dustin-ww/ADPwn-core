@@ -21,7 +21,7 @@ type ADPwnModuleRepository interface {
 	//CRUD
 	GetAll(ctx context.Context, tx *gorm.DB) ([]*adpwn.Module, error)
 	CreateWithObject(ctx context.Context, tx *gorm.DB, module *adpwn.Module) (string, error)
-	Get(ctx context.Context, tx *gorm.DB, attackId string) (*adpwn.Module, error)
+	Get(ctx context.Context, tx *gorm.DB, moduleKey string) (*adpwn.Module, error)
 	CheckIfExistsByKey(ctx context.Context, tx *gorm.DB, key string) (bool, error)
 
 	// module dependencies
@@ -42,22 +42,20 @@ func (r *PostgresADPwnModuleRepository) GetOrderedDependencies(ctx context.Conte
 	// This mimics the WITH RECURSIVE functionality from PostgreSQL
 	// See: https://www.dylanpaulus.com/posts/postgres-is-a-graph-database/
 	query := `
-        WITH RECURSIVE dependency_modules AS (
-            -- Base case: get direct dependencies of the starting module
-            SELECT next_module
+        WITH RECURSIVE dependent_modules AS (
+            SELECT previous_module
             FROM adpwn_modules_dependencies
-            WHERE previous_module = ?
+            WHERE next_module = ?
             
             UNION
             
-            -- Recursive case: get dependencies of dependencies
-            SELECT e.next_module
+            SELECT e.previous_module
             FROM adpwn_modules_dependencies e
-            JOIN dependency_modules dm ON e.previous_module = dm.next_module
+            JOIN dependent_modules dm ON e.next_module = dm.previous_module
         )
-        SELECT m.*
+        SELECT m.key
         FROM adpwn_modules m
-        JOIN dependency_modules dm ON m.key = dm.next_module
+        JOIN dependent_modules dm ON m.key = dm.previous_module
     `
 
 	var moduleKeys []string
@@ -157,20 +155,19 @@ func (r *PostgresADPwnModuleRepository) CreateWithObject(ctx context.Context, tx
 	return module.AttackID, nil
 }
 
-func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, attackId string) (*adpwn.Module, error) {
+func (r *PostgresADPwnModuleRepository) Get(ctx context.Context, tx *gorm.DB, moduleKey string) (*adpwn.Module, error) {
 	{
 		var module adpwn.Module
 
 		tx := tx.WithContext(ctx)
 
-		err := tx.
-			Preload("Dependencies").
-			First(&module, "uid = ?", attackId).
+		err := tx.Table(TableModules).
+			First(&module, "key = ?", moduleKey).
 			Error
 
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, fmt.Errorf("module not found: %s", attackId)
+				return nil, fmt.Errorf("module not found: %s", moduleKey)
 			}
 			return nil, fmt.Errorf("database error: %w", err)
 		}

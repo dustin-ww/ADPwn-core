@@ -12,13 +12,19 @@ enumeration:
       loot_path: "/loot/nmap"
       options:
         fullscan:
+          key: _
+          label: Should Scan Run as Full Scan?
           type: checkbox
           required: true
         udp:
+          key: _
+          label: Should Scan Run in UDP Mode?
           type: textInput
           required: true
         additional:
           type: textInput
+          label: Additional Flags for nmap
+          placeholder: for example -sV
 
     # DNS Explorer
     DNSExplorer:
@@ -43,3 +49,9 @@ attack:
         - NetworkExplorer
         - DNSExplorer
       loot_path: "/loot/pn"
+      options:
+        fullscan:
+          key: _
+          label: Should Scan Run as Full Scan?
+          type: checkbox
+          required: true

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"ADPwn/core/plugin"
 	"ADPwn/core/service"
 	"ADPwn/rest/internal/routes"
+	"ADPwn/sse/sse"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -34,7 +37,8 @@ func main() {
 	})
 
 	projectService, err := service.NewProjectService()
-	adpwnModuleService, err := service.NewADPwnModuleService()
+	registry := plugin.GlobalRegistry
+	adpwnModuleService, err := service.NewADPwnModuleService(registry)
 	if err != nil {
 		log.Fatalf("Failed to initialize ProjectService: %v", err)
 	}
@@ -47,6 +51,7 @@ func main() {
 			"message": "hello",
 		})
 	})
-
+	fmt.Println("Starting SSE server...")
+	go sse.StartServer("8082")
 	router.Run(":8081")
 }

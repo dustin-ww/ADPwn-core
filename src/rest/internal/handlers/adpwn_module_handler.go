@@ -14,9 +14,9 @@ type ADPwnModuleHandler struct {
 	adpwnModuleService *service.ADPwnModuleService
 }
 
-func NewADPwnModuleHandler(adpwnModuleServic *service.ADPwnModuleService) *ADPwnModuleHandler {
+func NewADPwnModuleHandler(adpwnModuleService *service.ADPwnModuleService) *ADPwnModuleHandler {
 	return &ADPwnModuleHandler{
-		adpwnModuleService: adpwnModuleServic,
+		adpwnModuleService: adpwnModuleService,
 	}
 }
 
@@ -43,5 +43,17 @@ func (h *ADPwnModuleHandler) GetModuleInheritanceGraph(c *gin.Context) {
 }
 
 func (h *ADPwnModuleHandler) RunModule(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (h *ADPwnModuleHandler) RunAttackVector(c *gin.Context) {
+	log.Println("RUN")
+	moduleKey := c.Param("moduleKey")
+	err := h.adpwnModuleService.RunAttackVector(c.Request.Context(), moduleKey)
+	log.Println(err)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{})
 }

@@ -7,6 +7,10 @@ import (
 	"ADPwn/core/model/adpwn"
 	"ADPwn/core/plugin"
 	"ADPwn/core/service"
+	"ADPwn/sse/sse"
+	"fmt"
+	"log"
+	"time"
 )
 
 type NetworkExplorer struct {
@@ -22,7 +26,24 @@ func (n *NetworkExplorer) GetConfigKey() string {
 	return n.ConfigKey
 }
 
-func (n *NetworkExplorer) Execute(parameter adpwn.Parameter) error {
+func (n *NetworkExplorer) ExecuteModule(params *adpwn.Parameter, logger *sse.SSELogger) error {
+	// Log start of module execution
+	log.Printf("Executing module key: %s", n.ConfigKey)
+	logger.Info(fmt.Sprintf("Starting module: %s", n.ConfigKey))
+
+	logger.Event("scan_start", map[string]interface{}{
+		"target_network": params.Inputs["network"],
+		"ports":          "1-1024",
+	})
+
+	// Your additional module execution logic here
+	// ...
+
+	// Log completion of module
+	logger.Event("module_complete", map[string]interface{}{
+		"moduleKey": n.ConfigKey,
+		"timestamp": time.Now().Unix(),
+	})
 
 	return nil
 }
