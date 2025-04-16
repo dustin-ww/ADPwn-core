@@ -2,7 +2,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="images/ADPwnLogo.png" alt="Logo" width="150" height="190">
+    <img src="assets/ADPwnLogo.png" alt="Logo" width="150" height="190">
   </a>
 
 <h1 align="center">ADPwn</h1>
@@ -104,6 +104,13 @@ First of all you need following dependencies on you system:
 
 ADPwn can be used through the terminal interface. The usage should be very intuitive. Detailed examples can be found later in the wiki.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Documentation
+
+<details>
+  <summary>See component architecture</summary>
+  <img src="assets/components.png" alt="ADPwn components" >
+</details>
 
 <!-- ROADMAP -->
 ## Roadmap
