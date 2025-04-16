@@ -41,4 +41,5 @@ coverage.out
 # Module cache
 /.cache/
 
-devbox.lock
+deployments/devbox.lock
+.devbox

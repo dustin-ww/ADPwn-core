@@ -1,0 +1,103 @@
+version: "3.8"
+
+services:
+  adpwn-core:
+    build:
+      context: ..
+      dockerfile: ../Dockerfile
+      args:
+        INSTALL_TOOLS: "default"
+    image: adpwn-api:latest
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - GO_ENV=development
+      # Postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=adpwn
+      - POSTGRES_PASSWORD=adpwn
+      - POSTGRES_DB=adpwn
+      # Dgraph
+      - DGRAPH_HOST=alpha
+      - DGRAPH_PORT=9080
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - zero
+      - ratel
+      - alpha
+    networks:
+      - adpwn_network
+
+  adpwn-gui:
+    image: adpwn-ui:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NUXT_PUBLIC_API_BASE_URL=http://adpwn-core:8081
+    networks:
+      - adpwn_network
+    depends_on:
+      - adpwn-core
+
+
+
+  zero:
+    image: dgraph/dgraph:latest
+    volumes:
+      - zero_datav5:/dgraph
+    ports:
+      - 5080:5080
+      - 6080:6080
+    restart: on-failure
+    command: dgraph zero --my=zero:5080
+    networks:
+      - adpwn_network
+
+  alpha:
+    image: dgraph/dgraph:latest
+    volumes:
+      - alpha_datav5:/dgraph
+    ports:
+      - 8080:8080
+      - 9080:9080
+    restart: on-failure
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --security whitelist=0.0.0.0/0
+    networks:
+      - adpwn_network
+
+  ratel:
+    image: dgraph/ratel:latest
+    ports:
+      - 8000:8000
+    networks:
+      - adpwn_network
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "adpwn"
+      POSTGRES_USER: "adpwn"
+      POSTGRES_PASSWORD: "adpwn"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - adpwn_network
+    restart: on-failure
+networks:
+  adpwn_network:
+    driver: bridge
+
+volumes:
+  zero_datav5:
+  alpha_datav5:
+  postgres_data:
+  devbox-nix:
+  devbox-go:

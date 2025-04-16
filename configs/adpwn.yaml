@@ -1,0 +1,3 @@
+adpwn:
+  rest_port: 8081
+  sse_port: 8082

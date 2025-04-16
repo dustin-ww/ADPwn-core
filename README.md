@@ -2,7 +2,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="images/ADPwnLogo.png" alt="Logo" width="150" height="190">
+    <img src="assets/ADPwnLogo.png" alt="Logo" width="150" height="190">
   </a>
 
 <h1 align="center">ADPwn</h1>
@@ -109,7 +109,7 @@ ADPwn can be used through the terminal interface. The usage should be very intui
 
 <details>
   <summary>See component architecture</summary>
-  <img src="images/components.png" alt="ADPwn components" >
+  <img src="assets/components.png" alt="ADPwn components" >
 </details>
 
 <!-- ROADMAP -->
