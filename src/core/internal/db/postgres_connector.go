@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -24,13 +26,36 @@ const txKey ctxKey = "dbTx"
 func GetPostgresDB() (*gorm.DB, error) {
 	pgOnce.Do(func() {
 		// Connection String
-		dsn := "host=localhost user=adpwn password=adpwn dbname=adpwn port=5432 sslmode=disable"
+		host := os.Getenv("POSTGRES_HOST")
+		user := os.Getenv("POSTGRES_USER")
+		password := os.Getenv("POSTGRES_PASSWORD")
+		dbname := os.Getenv("POSTGRES_DB")
+		port := os.Getenv("POSTGRES_PORT")
+
+		if host == "" {
+			host = "localhost"
+			log.Println("WARNING: POSTGRES_HOST not set, using localhost")
+		}
+
+		if user == "" || password == "" || dbname == "" || port == "" {
+			user = "adpwn"
+			password = "adpwn"
+			dbname = "adpwn"
+			port = "5432"
+			log.Println("WARNING: POSTGRES vars via ens not set, trying postgres defaults")
+		}
+
+		dsn := fmt.Sprintf(
+			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+			host, user, password, dbname, port,
+		)
 
 		config := &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		}
 
 		db, err := gorm.Open(postgres.Open(dsn), config)
+
 		if err != nil {
 			pgErr = fmt.Errorf("gorm connection failed: %w", err)
 			return

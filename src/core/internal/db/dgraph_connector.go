@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/dgraph-io/dgo/v210"
@@ -21,13 +22,22 @@ var (
 func GetDB() (*dgo.Dgraph, error) {
 	once.Do(func() {
 
+		// Connection String
+		host := os.Getenv("DGRAPH_HOST")
+		port := os.Getenv("DGRAPH_PORT")
+
 		dialOpts := append([]grpc.DialOption{},
 			grpc.WithInsecure(),
 			grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
 		)
 		var err error
 
-		conn, err := grpc.NewClient("localhost:9080", dialOpts...)
+		if host == "" {
+			host = "localhost"
+			log.Println("WARNING: Dgraph host not set, using localhost")
+		}
+
+		conn, err := grpc.NewClient(host+port, dialOpts...)
 		if err != nil {
 			dbErr = err
 			log.Fatal(err)

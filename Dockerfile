@@ -1,4 +1,3 @@
-
 # Build-Stage
 FROM golang:1.24.1-alpine AS builder
 
@@ -8,7 +7,7 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-COPY config/tools.json* /app/config/
+COPY config/ /app/config/
 
 RUN if [ -f "/app/config/tools.json" ]; then \
         apk add --no-cache jq && \
@@ -39,11 +38,13 @@ FROM alpine:latest
 
 ARG INSTALL_TOOLS="default"
 
-COPY config/tools.json* /root/config/
+# Wichtig: Erstelle das /config Verzeichnis und kopiere Dateien dorthin statt nach /root/config
+RUN mkdir -p /config
+COPY config/ /config/
 
-RUN if [ -f "/root/config/tools.json" ]; then \
+RUN if [ -f "/config/tools.json" ]; then \
         apk add --no-cache jq && \
-        TOOLS_TO_INSTALL=$(jq -r '.tools | join(" ")' /root/config/tools.json 2>/dev/null || echo "${INSTALL_TOOLS}"); \
+        TOOLS_TO_INSTALL=$(jq -r '.tools | join(" ")' /config/tools.json 2>/dev/null || echo "${INSTALL_TOOLS}"); \
     else \
         TOOLS_TO_INSTALL="${INSTALL_TOOLS}"; \
     fi && \
@@ -59,6 +60,7 @@ WORKDIR /root/
 
 COPY --from=builder /go/bin/app .
 
-EXPOSE 8080
+EXPOSE 8081
+EXPOSE 8082
 
 CMD ["./app"]

@@ -1,6 +1,55 @@
 version: "3.8"
 
 services:
+  adpwn-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Optionaler Parameter für zusätzliche Tools
+        # - "default" installiert nmap
+        # - Alternativ kann eine Liste von Paketen angegeben werden
+        INSTALL_TOOLS: "default"
+    image: adpwn-api:latest
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - GO_ENV=development
+      # Postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=adpwn
+      - POSTGRES_PASSWORD=adpwn
+      - POSTGRES_DB=adpwn
+      # Dgraph
+      - DGRAPH_HOST=alpha
+      - DGRAPH_PORT=9080
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - zero
+      - ratel
+      - alpha
+    networks:
+      - adpwn_network
+
+  adpwn-gui:
+    image: adpwn-ui:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NUXT_PUBLIC_API_BASE_URL=http://adpwn-core:8081
+    networks:
+      - adpwn_network
+    depends_on:
+      - adpwn-core
+
+
+
   zero:
     image: dgraph/dgraph:latest
     volumes:

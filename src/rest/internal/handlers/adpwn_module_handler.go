@@ -68,3 +68,7 @@ func (h *ADPwnModuleHandler) GetAttackVectorOptions(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, options)
 }
+
+func (h *ADPwnModuleHandler) GetModuleOptions(c *gin.Context) {
+	panic("not implemented")
+}

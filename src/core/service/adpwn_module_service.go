@@ -117,6 +117,10 @@ func (s *ADPwnModuleService) GetAttackVectorByKey(ctx context.Context, moduleKey
 			return nil, fmt.Errorf("error while fetching all dependencies of adpwn modules for graph edges %s", err)
 		}
 
+		if module.DependencyVector == nil {
+			module.DependencyVector, err = s.adpwnModuleRepo.GetOrderedDependencies(ctx, db, moduleKey)
+		}
+
 		for _, dependencyKey := range module.DependencyVector {
 			dep, err := s.adpwnModuleRepo.Get(ctx, db, dependencyKey)
 			if err != nil {
@@ -164,22 +168,35 @@ func (s *ADPwnModuleService) RunAttackVector(ctx context.Context, key string) er
 }
 
 func (s *ADPwnModuleService) GetOptionsForAttackVector(ctx context.Context, moduleKey string) ([]*adpwn.ModuleOption, error) {
-	modules, err := s.GetAttackVectorByKey(ctx, moduleKey)
-	if err != nil {
-		return nil, err
-	}
+	return db.ExecutePostgresRead(ctx, s.db, func(db *gorm.DB) ([]*adpwn.ModuleOption, error) {
+		modules, err := s.GetAttackVectorByKey(ctx, moduleKey)
+		log.Println(moduleKey)
+		log.Println(len(modules))
+		if err != nil {
+			return nil, err
+		}
 
-	seenKeys := make(map[string]struct{})
-	uniqueOptions := make([]*adpwn.ModuleOption, 0)
-
-	for _, module := range modules {
-		for _, option := range module.Options {
-			key := option.Key
-			if _, exists := seenKeys[key]; !exists {
-				seenKeys[key] = struct{}{}
-				uniqueOptions = append(uniqueOptions, option)
+		for _, module := range modules {
+			module.Options, err = s.adpwnModuleRepo.GetOptions(ctx, db, module.Key)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get module options: %w", err)
 			}
 		}
-	}
-	return uniqueOptions, nil
+
+		seenKeys := make(map[string]struct{})
+		uniqueOptions := make([]*adpwn.ModuleOption, 0)
+
+		for _, module := range modules {
+			for _, option := range module.Options {
+				log.Println(option.Key)
+				key := option.Key
+				if _, exists := seenKeys[key]; !exists {
+					seenKeys[key] = struct{}{}
+					uniqueOptions = append(uniqueOptions, option)
+				}
+			}
+		}
+		return uniqueOptions, nil
+	})
+
 }

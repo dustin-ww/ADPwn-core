@@ -47,6 +47,7 @@ func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnModuleService *service
 			moduleItemGroup := moduleGroup.Group("/:moduleKey")
 			{
 				moduleItemGroup.GET("/run", moduleHandler.RunModule)
+				moduleItemGroup.GET("/options", moduleHandler.GetModuleOptions)
 
 				moduleItemVectorGroup := moduleItemGroup.Group("/vector")
 				{
