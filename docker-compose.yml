@@ -6,9 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Optionaler Parameter für zusätzliche Tools
-        # - "default" installiert nmap
-        # - Alternativ kann eine Liste von Paketen angegeben werden
         INSTALL_TOOLS: "default"
     image: adpwn-api:latest
     ports:
@@ -103,3 +100,5 @@ volumes:
   zero_datav5:
   alpha_datav5:
   postgres_data:
+  devbox-nix:  # Für Nix-Store (wichtig für Performance)
+  devbox-go:   # Go-Cache für schnellere Builds

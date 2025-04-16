@@ -1,0 +1,20 @@
+{
+  "packages": [
+    "nmap",
+    "jq",
+    "git"
+  ],
+  "shell": {
+    "init_hook": "cd ${WORKSPACE_ROOT} && go work sync && go mod download"
+  },
+  "env": {
+    "GO_ENV":            "development",
+    "POSTGRES_HOST":     "localhost",
+    "POSTGRES_PORT":     "5432",
+    "POSTGRES_USER":     "adpwn",
+    "POSTGRES_PASSWORD": "adpwn",
+    "POSTGRES_DB":       "adpwn",
+    "DGRAPH_HOST":       "localhost",
+    "DGRAPH_PORT":       "9080"
+  }
+}

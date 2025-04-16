@@ -79,7 +79,6 @@ func GetPostgresDB() (*gorm.DB, error) {
 
 func ExecutePostgresInTransaction(ctx context.Context, db *gorm.DB, op func(tx *gorm.DB) error) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		// Transaction in Context speichern
 		ctx = context.WithValue(ctx, txKey, tx)
 		return op(tx.WithContext(ctx))
 	})
