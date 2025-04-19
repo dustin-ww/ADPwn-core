@@ -7,13 +7,13 @@ import (
 )
 
 type DNSExplorer struct {
-	Dependencies []string
+	dependencies []string
 	Modes        []string
-	ConfigKey    string
+	configKey    string
 }
 
-func (n *DNSExplorer) GetConfigKey() string {
-	return n.ConfigKey
+func (n *DNSExplorer) ConfigKey() string {
+	return n.configKey
 }
 
 func (n *DNSExplorer) DependsOn() int {
@@ -21,8 +21,8 @@ func (n *DNSExplorer) DependsOn() int {
 	panic("implement me")
 }
 
-func (n *DNSExplorer) GetDependencies() []string {
-	return n.Dependencies
+func (n *DNSExplorer) Dependencies() []string {
+	return n.dependencies
 }
 
 func (n *DNSExplorer) ExecuteModule(params *input.Parameter, logger *sse.SSELogger) error {
@@ -32,7 +32,7 @@ func (n *DNSExplorer) ExecuteModule(params *input.Parameter, logger *sse.SSELogg
 // INIT
 func init() {
 	module := &DNSExplorer{
-		ConfigKey: "DNSExplorer",
+		configKey: "DNSExplorer",
 	}
 	plugin.RegisterPlugin(module)
 

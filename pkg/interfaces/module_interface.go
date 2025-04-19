@@ -6,6 +6,6 @@ import (
 )
 
 type ADPwnModule interface {
-	GetConfigKey() string
+	ConfigKey() string
 	ExecuteModule(params *input.Parameter, logger *sse.SSELogger) error
 }

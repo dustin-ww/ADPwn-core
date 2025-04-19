@@ -13,17 +13,25 @@ import (
 	"time"
 )
 
+// INITIALIZE MODULE AS ADPWN PLUGIN
+func init() {
+	module := &NetworkExplorer{
+		configKey: "NetworkExplorer",
+	}
+	plugin.RegisterPlugin(module)
+}
+
 type NetworkExplorer struct {
-	ConfigKey string
-	Modes     []string
+	// Internal
+	configKey string
 	// Services
 	projectService *service.ProjectService
-	// Adapter
+	// Tool Adapter
 	nmapAdapter *adapter.NmapAdapter
 }
 
-func (n *NetworkExplorer) GetConfigKey() string {
-	return n.ConfigKey
+func (n *NetworkExplorer) ConfigKey() string {
+	return n.configKey
 }
 
 func (n *NetworkExplorer) ExecuteModule(params *input.Parameter, logger *sse.SSELogger) error {
@@ -128,14 +136,4 @@ func (n *NetworkExplorer) isDomainController(ports serializable.Ports) bool {
 	}
 
 	return matchCount >= 3
-}
-
-// INIT
-func init() {
-
-	module := &NetworkExplorer{
-		ConfigKey: "NetworkExplorer",
-	}
-
-	plugin.RegisterPlugin(module)
 }

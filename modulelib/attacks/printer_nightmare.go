@@ -7,12 +7,12 @@ import (
 )
 
 type PrinterNightmare struct {
-	ConfigKey string
+	configKey string
 }
 
-func (n *PrinterNightmare) GetConfigKey() string {
+func (n *PrinterNightmare) ConfigKey() string {
 	//TODO implement me
-	return n.ConfigKey
+	return n.configKey
 }
 
 func (n *PrinterNightmare) DependsOn() int {
@@ -27,7 +27,7 @@ func (n *PrinterNightmare) ExecuteModule(params *input.Parameter, logger *sse.SS
 // INIT
 func init() {
 	module := &PrinterNightmare{
-		ConfigKey: "PrinterNightmare",
+		configKey: "PrinterNightmare",
 	}
 	plugin.RegisterPlugin(module)
 }
