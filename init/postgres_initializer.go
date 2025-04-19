@@ -1,34 +1,30 @@
-package main
+// ADPwn-core/internal/dbschema/postgres.go
+package init
 
 import (
-	"ADPwn-core/internal/db"
 	"fmt"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"strings"
 	"time"
 )
 
-func InitializePostgresDB() {
-	gormDB, err := db.GetPostgresDB()
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
+// InitializePostgresSchema initializes the PostgreSQL schema
+func InitializePostgresSchema(gormDB *gorm.DB) error {
 	// Get the underlying *sql.DB from GORM
 	sqlDB, err := gormDB.DB()
 	if err != nil {
-		log.Fatalf("Failed to get SQL DB from GORM: %v", err)
+		return fmt.Errorf("failed to get SQL DB from GORM: %v", err)
 	}
 
-	// Now you can use *sql.DB methods
+	// Set connection pool parameters
 	sqlDB.SetMaxIdleConns(25)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	schema, err := os.ReadFile("./adpwn.sql")
 	if err != nil {
-		log.Fatalf("Failed to read schema file: %v", err)
+		return fmt.Errorf("failed to read schema file: %v", err)
 	}
 	log.Println("Postgres: Schema file read successfully.")
 
@@ -41,18 +37,15 @@ func InitializePostgresDB() {
 
 		result := gormDB.Exec(cmd)
 		if result.Error != nil {
-			log.Fatalf("Failed to execute SQL command: %v", result.Error)
+			return fmt.Errorf("failed to execute SQL command: %v", result.Error)
 		}
 	}
 	log.Println("Postgres: Database schema initialized successfully")
+	return nil
 }
 
-func DropAllPostgresObjects() error {
-	gormDB, err := db.GetPostgresDB()
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-
+// DropAllPostgresObjects drops all objects in the PostgreSQL database
+func DropAllPostgresObjects(gormDB *gorm.DB) error {
 	// The SQL script for dropping everything
 	dropScript := `
     -- Disable foreign key checks temporarily

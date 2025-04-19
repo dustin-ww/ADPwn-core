@@ -1,3 +1,7 @@
+CREATE TABLE application (
+    
+)
+
 CREATE TABLE adpwn_modules (
                                module_id INT GENERATED ALWAYS AS IDENTITY,
                                key VARCHAR(100) NOT NULL,

@@ -1,6 +1,7 @@
 package db
 
 import (
+	setup "ADPwn-core/init"
 	"context"
 	"fmt"
 	"log"
@@ -61,6 +62,15 @@ func GetPostgresDB() (*gorm.DB, error) {
 			return
 		}
 
+		if !isPotgresInitialized(db) {
+			log.Println("WARNING: POSTGRES is not initialized yet! Initializing database...")
+			err := setup.InitializePostgresSchema(db)
+			if err != nil {
+				pgErr = fmt.Errorf("gorm connection failed: %w", err)
+				return
+			}
+		}
+
 		sqlDB, err := db.DB()
 		if err != nil {
 			pgErr = fmt.Errorf("connection pool setup failed: %w", err)
@@ -75,6 +85,14 @@ func GetPostgresDB() (*gorm.DB, error) {
 	})
 
 	return pgDB, pgErr
+}
+
+func isPotgresInitialized(db *gorm.DB) bool {
+	var count int64
+
+	db.Raw("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'").Scan(&count)
+
+	return count > 0
 }
 
 func ExecutePostgresInTransaction(ctx context.Context, db *gorm.DB, op func(tx *gorm.DB) error) error {

@@ -2,7 +2,8 @@
   "packages": [
     "nmap",
     "jq",
-    "git"
+    "git",
+    "netexec@latest"
   ],
   "shell": {
     "init_hook": "cd ${WORKSPACE_ROOT} && go work sync && go mod download"
