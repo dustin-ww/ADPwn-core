@@ -4,7 +4,7 @@ package service
 import (
 	"ADPwn-core/internal/sse"
 	"ADPwn-core/pkg/interfaces"
-	"ADPwn-core/pkg/model/adpwn"
+	"ADPwn-core/pkg/model/adpwn/input"
 	"context"
 	"fmt"
 	"github.com/google/uuid"
@@ -14,18 +14,18 @@ import (
 
 // ModuleExecutor represents something that can execute an ADPwn module
 type ModuleExecutor interface {
-	ExecuteModule(key string, params *adpwn.Parameter) error
+	ExecuteModule(key string, params *input.Parameter) error
 }
 
 // RunAttackVector runs an attack vector starting with the target module
-func RunAttackVector(ctx context.Context, targetModuleKey string, params *adpwn.Parameter, executor interfaces.ModuleExecutor) error {
+func RunAttackVector(ctx context.Context, targetModuleKey string, params *input.Parameter, executor interfaces.ModuleExecutor) error {
 	runID := uuid.New().String()
 	logger := sse.GetLogger(runID)
 
 	log.Println("Starting Execution with runID: " + runID)
 
 	if params == nil {
-		params = &adpwn.Parameter{}
+		params = &input.Parameter{}
 	}
 	params.RunID = runID
 

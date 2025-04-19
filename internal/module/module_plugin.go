@@ -5,6 +5,7 @@ import (
 	"ADPwn-core/internal/sse"
 	"ADPwn-core/pkg/interfaces"
 	"ADPwn-core/pkg/model/adpwn"
+	"ADPwn-core/pkg/model/adpwn/input"
 	"ADPwn-core/pkg/service"
 	"context"
 	"fmt"
@@ -50,7 +51,7 @@ func GetModule(key string) *adpwn.Module {
 
 // Make sure Registry implements interfaces.ModuleExecutor
 // registry.go
-func (r *Registry) ExecuteModule(key string, params *adpwn.Parameter) error {
+func (r *Registry) ExecuteModule(key string, params *input.Parameter) error {
 	impl, ok := r.implementations[key]
 	if !ok {
 		return fmt.Errorf("no implementation found for module key: %s", key)
@@ -65,7 +66,7 @@ func (r *Registry) ExecuteModule(key string, params *adpwn.Parameter) error {
 	return impl.ExecuteModule(params, moduleLogger)
 }
 
-func ExecuteModule(key string, params *adpwn.Parameter) error {
+func ExecuteModule(key string, params *input.Parameter) error {
 	return GlobalRegistry.ExecuteModule(key, params)
 }
 

@@ -39,7 +39,7 @@ func RegisterADPwnModuleHandlers(router *gin.Engine, adpwnModuleService *service
 
 	adpwnGroup := router.Group("/adpwn")
 	{
-		moduleGroup := adpwnGroup.Group("/modulelib")
+		moduleGroup := adpwnGroup.Group("/modules")
 		{
 			moduleGroup.GET("/", moduleHandler.GetModules)
 			moduleGroup.GET("/graph", moduleHandler.GetModuleInheritanceGraph)

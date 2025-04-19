@@ -7,6 +7,7 @@
 
 # Output of the go command
 *.out
+moduleout/
 
 # IDE/editor configurations
 .vscode/

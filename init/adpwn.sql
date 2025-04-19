@@ -1,5 +1,5 @@
 CREATE TABLE application (
-    
+
 )
 
 CREATE TABLE adpwn_modules (
@@ -87,6 +87,8 @@ CREATE TABLE adpwn_module_last_runs
 CREATE TABLE adpwn_module_logs (
     project_uid VARCHAR(255),
     module_key INT,
+    run_uid VARCHAR,
     created_at TIMESTAMP,
-    message VARCHAR
+    message VARCHAR,
+    PRIMARY KEY (project_uid, module_key, run_uid)
 );

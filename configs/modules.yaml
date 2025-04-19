@@ -11,6 +11,10 @@ enumeration:
       inherits:
       loot_path: "/loot/nmap"
       options:
+        target:
+          type: textInput
+          label: Target Input
+          placeholder: for example 0.0.0.0/24
         fullscan:
           key: _
           label: Should Scan Run as Full Scan?

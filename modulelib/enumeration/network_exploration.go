@@ -6,7 +6,7 @@ import (
 	"ADPwn-core/pkg/adapter/serializable"
 	adapter "ADPwn-core/pkg/adapter/tools"
 	"ADPwn-core/pkg/model"
-	"ADPwn-core/pkg/model/adpwn"
+	"ADPwn-core/pkg/model/adpwn/input"
 	"ADPwn-core/pkg/service"
 	"fmt"
 	"log"
@@ -26,7 +26,7 @@ func (n *NetworkExplorer) GetConfigKey() string {
 	return n.ConfigKey
 }
 
-func (n *NetworkExplorer) ExecuteModule(params *adpwn.Parameter, logger *sse.SSELogger) error {
+func (n *NetworkExplorer) ExecuteModule(params *input.Parameter, logger *sse.SSELogger) error {
 	// Log start of module execution
 	log.Printf("Executing module key: %s", n.ConfigKey)
 	logger.Info(fmt.Sprintf("Starting module: %s", n.ConfigKey))
@@ -35,9 +35,6 @@ func (n *NetworkExplorer) ExecuteModule(params *adpwn.Parameter, logger *sse.SSE
 		"target_network": params.Inputs["network"],
 		"ports":          "1-1024",
 	})
-
-	// Your additional module execution logic here
-	// ...
 
 	// Log completion of module
 	logger.Event("module_complete", map[string]interface{}{

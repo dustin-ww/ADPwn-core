@@ -3,7 +3,7 @@ package attacks
 import (
 	plugin "ADPwn-core/internal/module"
 	"ADPwn-core/internal/sse"
-	"ADPwn-core/pkg/model/adpwn"
+	"ADPwn-core/pkg/model/adpwn/input"
 )
 
 type PrinterNightmare struct {
@@ -20,7 +20,7 @@ func (n *PrinterNightmare) DependsOn() int {
 	panic("implement me")
 }
 
-func (n *PrinterNightmare) ExecuteModule(params *adpwn.Parameter, logger *sse.SSELogger) error {
+func (n *PrinterNightmare) ExecuteModule(params *input.Parameter, logger *sse.SSELogger) error {
 	return nil
 }
 
