@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"ADPwn-core/pkg/input"
 	"ADPwn-core/pkg/service"
 	"github.com/gin-gonic/gin"
+	"io"
 	"log"
 	"net/http"
 )
@@ -44,14 +46,25 @@ func (h *ADPwnModuleHandler) RunModule(c *gin.Context) {
 }
 
 func (h *ADPwnModuleHandler) RunAttackVector(c *gin.Context) {
-	log.Println("RUN")
 	moduleKey := c.Param("moduleKey")
-	err := h.adpwnModuleService.RunAttackVector(c.Request.Context(), moduleKey)
-	log.Println(err)
+
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	params, err := input.ParseParameters(body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.adpwnModuleService.RunAttackVector(c.Request.Context(), moduleKey, &params); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{})
 }
 

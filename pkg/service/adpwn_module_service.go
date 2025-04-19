@@ -5,6 +5,7 @@ import (
 	"ADPwn-core/internal/repository"
 	"ADPwn-core/pkg/interfaces"
 	"ADPwn-core/pkg/model/adpwn"
+	"ADPwn-core/pkg/model/adpwn/input"
 	"context"
 	"fmt"
 	"gorm.io/gorm"
@@ -156,10 +157,10 @@ func (s *ADPwnModuleService) GetInheritanceGraph(ctx context.Context) (*adpwn.In
 	})
 }
 
-func (s *ADPwnModuleService) RunAttackVector(ctx context.Context, key string) error {
+func (s *ADPwnModuleService) RunAttackVector(ctx context.Context, key string, params *input.Parameter) error {
 	return db.ExecutePostgresInTransaction(ctx, s.db, func(tx *gorm.DB) error {
 		// Use the attackRunner that was injected into the service
-		err := RunAttackVector(ctx, key, nil, s.attackRunner)
+		err := RunAttackVector(ctx, key, params, s.attackRunner)
 		if err != nil {
 			return err
 		}
